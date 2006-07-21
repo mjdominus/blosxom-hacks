@@ -58,7 +58,7 @@ $static_dir = "/home/mjd/misc/blog/static";
 $static_password = "blurfl";
 
 # What flavours should I generate statically?
-@static_flavours = qw/html rss atom/;
+@static_flavours = qw/html rss atom index/;
 
 # Should I statically generate individual entries?
 # 0 = no, 1 = yes
@@ -66,7 +66,14 @@ $static_entries = 1;
 
 # --------------------------------
 
-use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %template $template $depth $num_entries $file_extension $default_flavour $static_or_dynamic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $entries $output $header $show_future_entries %files %indexes %others !;
+use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %template $template $depth $num_entries $file_extension $default_flavour $static_or_dynamic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $entries $output $header $show_future_entries %files %indexes %others $page_title!;
+
+#open DIAGNOSIS, ">", "/tmp/warnstdout";
+#{ my $ofh = select DIAGNOSIS;
+#  $| = 1;
+#  select $ofh;
+#}
+#tie $output, 'varwatch', \*DIAGNOSIS or die;
 
 use strict;
 use FileHandle;
@@ -191,6 +198,7 @@ $entries =
         my $d; 
         my $curr_depth = $File::Find::dir =~ tr[/][]; 
         return if $depth and $curr_depth > $depth; 
+        return if $File::Find::dir =~ m{/CVS$};
      
         if ( 
           # a match
@@ -268,6 +276,7 @@ if (!$ENV{GATEWAY_INTERFACE} and param('-password') and $static_password and par
             ? &generate('static', $p, '', $flavour, $content_type)
             : &generate('static', '', $p, $flavour, $content_type);
         $fh_w->close;
+        foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('reset') and $plugin->reset() }
       }
     }
   }
@@ -289,7 +298,8 @@ foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('end') 
 # Generate 
 sub generate {
   my($static_or_dynamic, $currentdir, $date, $flavour, $content_type) = @_;
-
+  my $single_title;
+  my $datepath = $date;
   my %f = %files;
 
   # Plugins: Skip
@@ -306,6 +316,10 @@ sub generate {
       return $template;
     };  
 
+  my $ne;
+  foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('num_entries') and defined($ne = $plugin->num_entries($flavour)) and last; }
+  $ne = $num_entries unless defined $ne;
+
   unless (defined($skip) and $skip) {
 
     # Plugins: Interpolate
@@ -313,19 +327,9 @@ sub generate {
     # override the default built-in interpolate subroutine
     my $tmp; foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('interpolate') and defined($tmp = $plugin->interpolate()) and $interpolate = $tmp and last; }
         
-    # Head
-    my $head = (&$template($currentdir,'head',$flavour));
-  
-    # Plugins: Head
-    foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('head') and $entries = $plugin->head($currentdir, \$head) }
-  
-    $head = &$interpolate($head);
-  
-    $output .= $head;
-    
-    # Stories
+    # Acquire Stories
     my $curdate = '';
-    my $ne = $num_entries;
+    my @stories;
 
     if ( $currentdir =~ /(.*?)([^\/]+)\.(.+)$/ and $2 ne 'index' ) {
       $currentdir = "$1$2.$file_extension";
@@ -377,9 +381,11 @@ sub generate {
       foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('date') and $entries = $plugin->date($currentdir, \$date, $files{$path_file}, $dw,$mo,$mo_num,$da,$ti,$yr) }
   
       $date = &$interpolate($date);
-  
-      $curdate ne $date and $curdate = $date and $output .= $date;
+
+      my $st_date_header = "";
+      $curdate ne $date and $curdate = $date and $st_date_header = $date;
       
+
       use vars qw/ $title $body $raw /;
       if (-f "$path_file" && $fh->open("< $path_file")) {
         chomp($title = <$fh>);
@@ -387,10 +393,11 @@ sub generate {
         $fh->close;
         $raw = "$title\n$body";
       }
+      $single_title = defined($single_title) ? "" : $title;
       my $story = (&$template($path,'story',$flavour));
   
       # Plugins: Story
-      foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('story') and $entries = $plugin->story($path, $fn, \$story, \$title, \$body) }
+      foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('story') and $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath) }
       
       if ($content_type =~ m{\Wxml$}) {
         # Escape <, >, and &, and to produce valid RSS
@@ -400,14 +407,28 @@ sub generate {
         $body =~ s/($escape_re)/$escape{$1}/g;
       }
   
-      $story = &$interpolate($story);
+      push @stories, $st_date_header .  &$interpolate($story);
     
-      $output .= $story;
       $fh->close;
   
       $ne--;
     }
   
+    # Head
+    $page_title = $single_title ? "$blog_title : $single_title" : $blog_title;
+    my $head = (&$template($currentdir,'head',$flavour));
+  
+    # Plugins: Head
+    foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('head') and $entries = $plugin->head($currentdir, \$head) }
+
+    $head = &$interpolate($head);
+  
+    $output .= $head;
+
+    # Insert stories
+    $output .= join "", @stories;
+    
+
     # Foot
     my $foot = (&$template($currentdir,'foot',$flavour));
   
@@ -440,6 +461,82 @@ sub nice_date {
   return ($dw,$mo,$mo_num,$da,$ti,$yr);
 }
 
+
+package varwatch;
+
+sub TIESCALAR {
+  my ($package, $fh) = @_;
+  my $store = "";
+  bless { store => \$store, fh => $fh } ;
+}
+
+sub FETCH {
+  my $self = shift;
+  ${$self->{store}};
+}
+
+sub STORE {
+  my ($self, $val) = @_;
+  my $old = $ {$self->{store}};
+  my $olen = length($old);
+  my ($act, $what) = ("set to", $val);
+  if (substr($val, 0, $olen) eq $old) {
+    ($act, $what) = ("appended", substr($val, $olen));
+  }
+  $what =~ tr/\n/ /;
+  $what =~ s/\s+$//;
+  my $fh = $self->{fh};
+  print $fh "var $act '$what'\n";
+  print $fh "  $_\n" for st();
+  print $fh "\n";
+  ${$self->{store}} = $val;
+}
+
+sub st {
+  my @stack;
+  my $spack = __PACKAGE__;
+  my $N = 0;
+  while (my @c = caller($N)) {
+    my ($cpack, $file, $line, $sub) = @c;
+    next if $sub =~ /^\Q$spack\E::/;
+    push @stack, "$sub ($file:$line)";
+  } continue { $N++ }
+  @stack;
+}
+
+package warnstdout;
+
+BEGIN { open DIAGNOSIS, ">", "/tmp/warnstdout";
+        my $ofh = select DIAGNOSIS;
+        $| = 1;
+        select $ofh;
+      }
+
+
+sub rig_fh {
+  my ($handle) = shift;
+  my $mode = shift || "<";
+  open my($fake_handle), "$mode&=", $handle or die $!;
+  tie *$handle, __PACKAGE__, $fake_handle;
+}
+
+sub TIEHANDLE {
+  my ($package, $truehandle) = @_;
+  bless $truehandle => $package;
+}
+
+sub PRINT {
+  my $true_handle = shift;
+  print $true_handle @_;
+  my $str = join("", @_);
+#  $str = substr($str, 0, 78);
+#  $str =~ tr/\n/ /;
+  print DIAGNOSIS "$str:\n";
+  print DIAGNOSIS "  $_\n" for st();
+  print DIAGNOSIS "\n";
+}
+
+package blosxom;
 
 # Default HTML and RSS template bits
 __DATA__
