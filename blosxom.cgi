@@ -22,7 +22,7 @@ $blog_language = "en";
 $datadir = "/home/mjd/misc/blog/entries";
 
 # What's my preferred base URL for this blog (leave blank for automatic)?
-$url = "http://www.plover.com/blog";
+$url = "http://blog.plover.com/";
 
 # Should I stick only to the datadir for items or travel down the
 # directory hierarchy looking for items?  If so, to what depth?
@@ -58,7 +58,7 @@ $static_dir = "/home/mjd/misc/blog/static";
 $static_password = "blurfl";
 
 # What flavours should I generate statically?
-@static_flavours = qw/html rss atom index/;
+@static_flavours = qw/html rss atom/;
 
 # Should I statically generate individual entries?
 # 0 = no, 1 = yes
@@ -295,9 +295,14 @@ else {
 # Plugins: End
 foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('end') and $entries = $plugin->end() }
 
+BEGIN {
+  open F, ">", "/tmp/blosxom-generate";
+}
+
 # Generate 
 sub generate {
   my($static_or_dynamic, $currentdir, $date, $flavour, $content_type) = @_;
+  print F "$currentdir $date $flavour $content_type\n";
   my $single_title;
   my $datepath = $date;
   my %f = %files;
@@ -317,7 +322,7 @@ sub generate {
     };  
 
   my $ne;
-  foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('num_entries') and defined($ne = $plugin->num_entries($flavour)) and last; }
+  foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('num_entries') and defined($ne = $plugin->num_entries($currentdir, $date, $flavour)) and last; }
   $ne = $num_entries unless defined $ne;
 
   unless (defined($skip) and $skip) {
@@ -433,7 +438,7 @@ sub generate {
     my $foot = (&$template($currentdir,'foot',$flavour));
   
     # Plugins: Foot
-    foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('foot') and $entries = $plugin->foot($currentdir, \$foot) }
+    foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('foot') and $entries = $plugin->foot($currentdir, \$foot, $datepath) }
   
     $foot = &$interpolate($foot);
     $output .= $foot;
