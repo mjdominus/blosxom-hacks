@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+use Getopt::Std;
+
+# -p : push pictures only
+getopts('mpe:');
+$ENV{PATH} = join ":", "/home/mjd/misc/blog/bin", "/home/mjd/src/perl/blosxom",
+  $ENV{PATH};
+
+load_vars($opt_e || "$ENV{HOME}/.ssh/agent-env");
+
+chomp(my @pic_exclude = <DATA>);
+run_command("rsync", map(qq{--exclude=$_}, @pic_exclude), "-ravz",
+            "--delete", "--rsh=ssh -P",
+            "/home/mjd/public_html/pictures/blog/",
+            "mjdominus\@blog.plover.com:pic.blog.plover.com/");
+
+run_command("rsync", "-ravz", "--delete", "--rsh=ssh -P", 
+            "/home/mjd/misc/blog/static/",
+            "mjdominus\@blog.plover.com:blog.plover.com/") unless $opt_p;
+
+exit if $opt_m || $opt_p;
+
+#warn "pinging...\n";
+#run_command("tping");
+
+sub run_command {
+  warn join(" ", @_), "\n";
+  unless (system(@_) == 0) {
+    my $stat = $? / 265;
+    warn "... exited with status $stat";
+    exit 1;
+  }
+}
+
+sub load_vars {
+  open my($f), "<", $_[0] or die "Couldn't open $_[0]: $!; aborting";
+  while (<$f>) {
+    chomp;
+    if (/^([A-Z_]+)=(\S[^;|&^()\$~]*)/) {
+      $ENV{$1} = $2;
+      warn "$1=$2\n";
+    }
+  }
+}
+
+__DATA__
+*.tif
+*.tiff
+*.p[bgpn]m

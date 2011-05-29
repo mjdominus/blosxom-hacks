@@ -1,0 +1,50 @@
+#
+
+package path;
+use HTML::TreeBuilder;
+
+my $blogimg = "http://pic.blog.plover.com/";
+
+sub start { 
+#  open F, ">", "/tmp/path.err";
+  return 0;
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+
+  return unless $$body_ref =~ /\bBLOG(?:IMG)?LINK\b/;
+
+#  print F "*** $path $filename\n";
+
+  my $TB = HTML::TreeBuilder->new();
+  $TB->ignore_ignorable_whitespace(0);
+  $TB->no_space_compacting(1);
+  my $html = $TB->parse($$body_ref)->eof->elementify();
+  my $changed;
+
+  for my $link ($html->look_down(_tag => 'a')) {
+    my $url = $link->attr('href');
+#    print F "href before: $url\n";
+    next unless $url =~ s{^BLOGLINK(?=/)}{$blosxom::url};
+#    print F "href after: $url\n";
+    $url =~ s/.blog$/.html/;
+    $link->attr('href', $url);
+    $changed = 1;
+  }
+
+  for my $link ($html->look_down(_tag => 'img')) {
+    my $url = $link->attr('src');
+#    print F "src before: $url\n";
+    next unless $url =~ s{^BLOGIMGLINK(?=/)}{$blogimg$path/$filename};
+#    print F "src after: $url\n";
+    $link->attr('src', $url);
+    $changed = 1;
+  }
+
+  $$body_ref = $html->as_HTML("\x0", "", {}) if $changed;
+
+  return 1;
+}
+
+1;

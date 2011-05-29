@@ -1,0 +1,70 @@
+
+package nextprev;
+
+open F, ">", "/tmp/blosxom";
+
+sub start {
+#  if (open F, "> /tmp/blosx") {
+#    for my $n (sort keys %blosxom::) {
+#      local *g = $blosxom::{$n};
+#      print F "\$$n: $g\n" if defined $g;
+#      print F "\@$n: @g\n" if @g;
+#      print F "\%$n: %g\n" if %g;
+#    }
+#  }
+  my ($lmo, $lyr) = ((localtime())[4]+1, (localtime())[5]+1900);
+  my $mo = $blosxom::path_info_mo || $lmo;
+  my $yr = $blosxom::path_info_yr || $lyr;
+  my $url = $blosxom::url;
+  
+  # If year and month both specified, link to previous / next month
+  # If year only specified, link to previous / next year
+  # If neither specified, link to previous month only
+
+  if (defined $blosxom::path_info_mo) { # both
+    ($prevyr, $prevmo) = ym_add($yr, $mo, -1);
+    ($nextyr, $nextmo) = ym_add($yr, $mo,  1);
+    $prevur = "$url/$prevyr/$prevmo/";
+    $nextur = "$url/$nextyr/$nextmo/";
+    $prevok = $prevyr > 2005 || $prevyr == 2005 && $prevmo > 9;
+    $prevlk = $prevok ? qq{<a href="$prevur">&lArr; Previous month</a>} : "";
+    $nextok = $yr != $lyr || $mo != $lmo;
+    $nextlk = $nextok ? qq{<a href="$nextur">Next month &rArr;</a>} : "";
+  } elsif (defined $blosxom::path_info_yr) {
+    ($prevyr) = ym_add($yr, 1, -1);
+    ($nextyr) = ym_add($yr, 12,  1);
+    $prevur = "$url/$prevyr/";
+    $nextur = "$url/$nextyr/";
+    $prevok = $prevyr >= 2005;
+    $prevlk = $prevok ? qq{<a href="$prevur">&lArr; Previous year</a>} : "";
+    $nextok = $yr != $lyr;
+    $nextlk = $nextok ? qq{<a href="$nextur">Next year &rArr;</a>} : "";
+  } else {                      # current month
+    ($prevyr, $prevmo) = ym_add($yr, $mo, -1);
+    $prevur = "$url/$prevyr/$prevmo/";
+    $prevlk = qq{<a href="$prevur">&lArr; Previous month</a>};
+    $nextok = 0;
+    $nextlk = "";
+  }
+  $bar = $prevok && $nextok ? "|" : "";
+
+  0;
+}
+
+sub ym_add {
+  my ($yr, $mo, $inc) = @_;
+  print F "Adjusting $mo/$yr + $inc\n";
+  $mo += $inc;
+  while ($mo < 1) {
+    $mo += 12;
+    $yr -= 1;
+  }
+  while ($mo > 12) {
+    $mo -= 12;
+    $yr += 1;
+  }
+  print F "... result $mo/$yr\n";
+  return (sprintf("%04d", $yr), sprintf("%02d", $mo));
+}
+
+1;

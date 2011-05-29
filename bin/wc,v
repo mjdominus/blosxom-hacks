@@ -1,0 +1,56 @@
+head	1.1;
+access;
+symbols;
+locks
+	mjd:1.1; strict;
+comment	@# @;
+
+
+1.1
+date	2006.03.29.01.18.16;	author mjd;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/usr/bin/perl
+
+use File::Find;
+my $sf = shift || "blog";
+my $maxl = 0;
+
+my $prefix = "/home/mjd/misc/blog/entries";
+find(\&wanted, $prefix);
+for my $file (sort @@files) {
+  my $sh = $file;
+
+
+  $sh =~ s{$prefix/*}{}o;
+  $maxl = $maxl > length($sh) ? $maxl : length($sh);
+
+  unless (open F, "<", $file) {
+    warn "Couldn't open file '$file': $!; skipping\n";
+    next;
+  }
+  my $wc = 0;
+  $wc += () = /\s+/g while <F>;
+  $wc{TOTAL} += $wc{$sh} = qx{wc -w $file};
+}
+
+for my $file (sort {$wc{$a} <=> $wc{$b}}  keys %wc) {
+  printf "%-${maxl}s %5d %5.1f%%\n", $file, $wc{$file}, $wc{$file}*100/$wc{TOTAL};
+}
+
+sub wanted {
+  my $sh = $File::Find::name;
+  push @@files, $sh if /\.$sf$/o && -f;
+}
+@

@@ -1,0 +1,13 @@
+
+require "point";
+
+number a, b;
+point P = cis(90);
+
+constraints {  (a, b) = cis(180); }
+
+draw { &dump_hash; }
+
+__END__
+
+require "testutils/dump_hash.pl";

@@ -1,0 +1,18 @@
+
+define simple {
+  number a;
+  param number b = 10;
+  constraints { a*b = 20; }
+}
+
+define hyperb {
+  simple S(b=4);
+}
+
+
+hyperb H;
+
+draw { &dump_hash; }
+
+__END__
+require 'testutils/dump_hash.pl';

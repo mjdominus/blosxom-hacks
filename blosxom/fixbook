@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+
+my ($dir) = @ARGV;
+
+defined($dir) or usage();
+
+use DB_File;
+use Fcntl ':flock';
+my $bookdb = "$dir/books.db";
+my $booklock = "$dir/books.lock";
+open F, "+<", $booklock or die $!;
+flock F, LOCK_EX or die $!;
+tie my(%bookdb), 'DB_File', $bookdb, O_CREAT | O_RDWR or die $!;
+for my $k (keys %bookdb) {
+  $bookdb{$k} =~ s/:/$;/g;
+}

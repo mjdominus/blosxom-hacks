@@ -1,0 +1,24 @@
+
+number a,b,c,d,e,f;
+
+constraints {
+  10*a + 8*b + 2*d = 0;
+  2*a + 12*b + d = 0;
+  4*a + 8*b + 2*c + e = 0;
+ 20*a + 2*b + 6*c + e = 0;
+ 40*a + 6*c = 0;
+ 40*a + 4*b + 2*c + 2*d + f = 0;
+}
+
+
+draw { 
+  &dumpi;
+}
+
+
+__END__
+
+use Data::Dumper;
+sub dumpi {
+  Data::Dumper::Dumper(@_);
+}

@@ -1,0 +1,84 @@
+#!/usr/bin/perl
+
+my $N = 0;
+
+my $dir = ".";
+
+$FORCE = 0;
+if ($ARGV[0] eq "-f") {
+  $FORCE = shift;
+}
+
+my @inputs;
+if (@ARGV == 1 && -d $ARGV[0]) {
+  $dir = shift;
+}
+
+if (@ARGV) {
+  @inputs = @ARGV;
+} else {
+  opendir  my ($t), $dir or die "opendir $dir: $!";
+  @inputs = sort grep !/^\./, grep /-i$/, readdir $t;
+}
+
+print "1..", scalar(@inputs), "\n";
+
+sub diff_report {
+  my ($a, $b) = @_;
+  my @r;
+  while (@$a && @$b) {
+    my ($A, $B) = ($a->[0], $b->[0]);
+    if ($A lt $B) {
+      push @r, "+ $A";
+      shift @$a;
+    } elsif ($A gt $B) {
+      push @r, "- $B";
+      shift @$b;
+    } else {
+      shift @$a;
+      shift @$b;
+    }
+  }
+  push @r, map "+ $_", @$a;
+  push @r, map "- $_", @$b;
+  return \@r;
+}
+
+for my $infile (@inputs) {
+  $infile =~ s/-i$// or die "input $input??";
+  my ($input, $output, $stamp) = ("$infile-i", "$infile-o", ".$infile-o");
+  if ($infile =~ m{/}) {
+    $stamp = $output;
+    substr($stamp, rindex($stamp, "/"), 1) = "/.";
+  } else {
+    $_ = "$dir/$_" for $input, $output, $stamp;
+  }
+  ++$N;
+
+  if (  ! $FORCE
+      && -e($stamp)
+      && -M($stamp) < -M("$input") && -M($stamp) < -M($output)) {
+    print "ok $N - $infile skipped (unchanged)\n";
+    next;
+  }
+  my @input = sort qx{./linogram.pl -P lib/testutils/dump_hash.pl $input 2> /dev/null};
+  my @output = -e($output) ? sort qx{cat $output} : ("FILE $output MISSING");
+  chomp @input;
+  chomp @output;
+  my $dr = diff_report(\@input, \@output);
+  if (@$dr) {
+    print "# $input -> $output\n";
+    print map "# $_\n", @$dr;
+    print "not ok $N\n";
+    push @BAD, $infile;
+  } else {
+    open my($z), ">", $stamp;
+    utime undef, undef, $stamp;
+    print "ok $N # $infile \n";
+  }
+}
+
+if (@BAD) {
+  my $N = @BAD;
+  print join "\n", map("# $_", "Failed ($N):", @BAD), "";
+}

@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+use Text::Template;
+use File::Find;
+use File::Spec;
+use File::Path ();
+use File::Basename;
+use POSIX;
+use strict;
+
+my $MKPATH;
+my $HOME = "/home/mjd/misc/blog";
+my $SRC = "$HOME/static";
+my $DST = "$HOME/moved";
+my %TMPL = (html => "$HOME/moved/html.tmpl",
+            rss => "$HOME/moved/rss.tmpl",
+            atom => "$HOME/moved/atom.tmpl",
+           );
+
+my $date = POSIX::strftime("%a, %d %b %Y", localtime());          
+my $atom_date = POSIX::strftime("%Y-%m-%dT%TZ", gmtime());
+
+chdir($SRC) or die "Couldn't chdir($SRC): $!; aborting";
+my @INFILES;
+File::Find::find(sub { push @INFILES, $File::Find::name 
+                         if -f $_ }, 
+                 ".");
+
+my %tmpl;
+for my $k (keys %TMPL) {
+  $tmpl{$k} = Text::Template->new(TYPE => "FILE",
+                                  SOURCE => $TMPL{$k},
+                                  DELIMITERS => ["<<<", ">>>"],
+                                 )
+    or die "TT Couldn't make template '$k': $Text::Template::ERROR; aborting";
+}
+
+for my $in (@INFILES) {
+  my ($base, $ext) = out($in);
+  my ($html_base) = $base;
+  $html_base =~ s/\.\w+$/.html/;
+  next unless my $tmpl = $tmpl{$ext};
+  my $out = "$DST/$base";
+  my $dir = File::Basename::dirname($out);
+  mkpath($dir) or die "Couldn't make dir '$dir': $MKPATH; aborting";
+  open my($F), ">", $out or die "Couldn't open '$out': $!; aborting";
+  my $txt = $tmpl->fill_in(HASH => { IN => $in, OUT => $out,
+                                     DATE_HUMAN => $date,
+                                     DATE_ATOM => $atom_date,
+                                     NEW_URL => "http://blog.plover.com/$base",
+                                     BAD_URL => "http://newbabe.pobox.com/~mjd/blog/$base",
+                                     BAD_HTML_URL => "http://newbabe.pobox.com/~mjd/blog/$html_base?" . time(),
+                                   })
+    or die "Couldn't fill in $ext: $Text::Template::ERROR; aborting";
+  print $F $txt or die "Couldn't write '$out': $!; aborting";
+  print STDERR "*" if $ext eq "html";
+#  warn "$in\n";
+}
+print STDERR "\n";
+
+sub out {
+  my $in = shift;
+#  my $dir = File::Basename::dirname($in);
+  1 while $in =~ s{^./}{};
+  my ($suff) =  $in =~ /\.(\w+)$/;
+  return ($in, $suff);
+}
+
+sub mkpath {
+  eval { File::Path::mkpath(@_) };
+  if ($@) {
+    $MKPATH = $@;
+    return;
+  } else { return 1 }
+}

@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+sub prindent {
+  print "  " x $indent, @_;
+}
+
+sub cvt {
+  my $dir = shift;
+  local $indent = $indent + 1;
+  my @components = split m{/}, $dir;
+  opendir my($D), $dir or die "$dir: $!";
+  my @s = grep {!/^\./ && $_ ne "CVS" } readdir $D;
+  return unless @s;
+  prindent "<DT><H3>$components[-1]</H3>\n" unless $indent == 1;
+  prindent "<DL><p>\n";
+  for my $s (@s) {
+    my $file = "$dir/$s";
+    if (-d $file) {
+      cvt($file)
+    } else {
+      next unless (my $url = $file) =~ s/\.blog$/\.html/;
+      next unless (my $notyet = $file) =~ s/\.blog$/\.notyet/;
+      next if -e $notyet;
+      $url =~ s{^./}{};
+      open my($F), "<", $file or die "$file: $!";
+      my $title = <$F>;
+      my $para = do { local $/ = ""; <$F> };
+      $para =~ s/<[^>]+>//g;
+      $title = $url unless $title  =~ /\S/;
+      chomp $title;
+      prindent qq{<DT><A HREF="http://www.plover.com/blog/$url">$title</A>\n};
+#      prindent qq{<DD>$para\n};
+    }  
+  }
+  prindent "</DL>\n";
+}
+
+my $dir = shift or die "Usage: $0 blogdir\n";
+chdir($dir) or die "chdir $dir: $!";
+print qq{<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1 LAST_MODIFIED="1147286995">Bookmarks</H1>
+  };
+cvt(".");

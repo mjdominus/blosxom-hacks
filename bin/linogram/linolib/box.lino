@@ -1,0 +1,28 @@
+
+require "hline";
+require "vline";
+require "point";
+
+define box {
+  vline left, right;
+  hline top, bottom;
+  point nw, n, ne, e, se, s, sw, w, c;
+  number ht, wd;
+  constraints {
+    nw = left.start  = top.start;
+    ne = right.start = top.end;
+    sw = left.end    = bottom.start;
+    se = right.end   = bottom.end;
+
+    n = (nw + ne)/2;
+    s = (sw + se)/2;
+    w = (nw + sw)/2;
+    e = (ne + se)/2;
+
+    c = (n + s)/2;
+
+    ht = left.length;
+    wd = top.length;
+  }
+}
+

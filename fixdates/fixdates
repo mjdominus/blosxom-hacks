@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+
+use LWP::Simple 'get';
+use HTML::TreeBuilder;
+use lib '/home/mjd/misc/blog/plugins/lib';
+use Blosxom::MJD::Date;
+use Date::Parse 'str2time';
+use Getopt::Std;
+
+getopts('n') or usage();
+
+my $blogdate = Blosxom::MJD::Date->new("./dates");
+# my $blogdate = Blosxom::MJD::Date->new();
+
+# http://web.archive.org/web/20071216004854/http://blog.plover.com/2007/
+my $archive_url = shift || "http://web.archive.org/web/20080504131009/http://blog.plover.com/2008/" or usage();
+my $archive_page = get($archive_url)
+  or die "Couldn't fetch archived version of page\n";
+
+my @items;
+while ($archive_page =~ 
+       m{<span\s+class="dateheader">(.*?)</span>
+         |
+         <a\s+class="storytitle"\s+name="(.*?)">(.*?)</a>
+         |
+         <a\s+href="(.*?)">permanent\ link</a>
+        }xg) {
+  if ($1) {
+    push @items, {DATE => $1};
+  } elsif ($2) {
+    push @items, {} unless $items[-1]{DATE};
+    $items[-1]{NAME} = $2;
+    $items[-1]{TITLE} = $3;
+  } elsif ($4) {
+    push @items, {} unless $items[-1]{DATE} && $items[-1]{NAME};
+    $items[-1]{URL} = $4;
+  } else {
+    die "???";
+  }
+}
+
+
+my $modified = 0;
+
+ITEM:
+for my $i (@items) {
+  my $BAD;
+  warn "Missing NAME\n" and $BAD++ unless $i->{NAME};
+  warn "$name: Missing DATE\n" and $BAD++ unless $i->{DATE};
+  warn "$name: Missing URL\n" and $BAD++ unless $i->{URL};
+
+  next if $BAD;
+
+  my $unix = str2time($i->{DATE});
+  if (defined $unix) { $i->{UNIX} = $unix }
+  else { warn "Unparseable date '$i->{DATE}'; skipping\n"; next ITEM; }
+
+  my $path = $i->{URL};
+  $path =~ s{http://blog\.plover\.com/}{} or do {
+      warn "URL did not begin with expected prefix; skipping\n"; 
+      next ITEM; };
+  $path =~ s/\.html$/.blog/;
+
+  next if date($i->{UNIX}) eq date($blogdate->time_of($path));
+
+  eval {
+    $blogdate->set_time_of($path, $i->{UNIX} + 86400/2);
+  };
+  if ($@) {
+    warn "Failed to set time of item '$i->{NAME}' ($path): $@; skipping\n";
+  } else {
+    warn "$path => $i->{date} OK!\n";
+    $modified++;
+  }
+}
+
+warn @items+0, " items found, $modified items modified\n";
+$blogdate->save_data();
+
+sub usage {
+  die "Usage: $0 [-n] archive_url\n";
+}
+
+sub date {
+  my $time = shift;
+  my ($d, $m, $y) = (localtime($time))[3,4,5];
+  sprintf("%04d%02d%02d", $y + 1900, $m + 1, $d);
+}

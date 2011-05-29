@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+use Getopt::Std;
+
+getopts('a') or die;
+$all = $opt_a ? "-all=1" : "";
+
+$ENV{PATH} = join ":", "/home/mjd/misc/blog/bin", "/home/mjd/src/perl/blosxom",
+  $ENV{PATH};
+system("blosxom.cgi $all -password=blurfl");

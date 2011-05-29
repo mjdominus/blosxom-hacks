@@ -1,0 +1,39 @@
+#!/usr/bin/perl -lan
+
+BEGIN { 
+  for (@ARGV) {
+    if (/\.gz$/) {
+      $_ = "gzip -dc $_ |";
+    }
+  }
+}
+
+my $url = $F[6];
+my $ref = $F[10];
+my $date = $F[3];
+my $agent = $F[11];
+next if $agent =~ /Zhuaxia/;
+
+$ref =~ s/^"//; $ref =~ s/"$//;
+
+#next unless $url =~ m{/blog/};
+next if $ref =~ m{\bgoogle\.(com|(com?\.)?\w\w)/};
+next if $ref =~ m{\bbloglines\.com/};
+next if $ref =~ m{\bsearch\.msn\.com/};
+next if $ref =~ m{\bsearch\.live\.com/};
+next if $ref =~ m{\bwww\.ask\.com/};
+next if $ref =~ m{\bsearch\.yahoo\.com/};
+next if $ref =~ m{\bbing\.com/};
+next if $ref =~ m{\b(search|aim\.search|aolsearch)\.aol\.com/};
+next if $ref =~ m{\bplover\.com/};
+next if $ref =~ m{\bnewbabe\.pobox\.com/};
+next if $ref =~ m{\blivejournal\.com/(friends){1,2}\b};
+next if $ref =~ m{\breddit\.com/};
+next if $ref =~ m{\bycombinator\.(org|com)/.*fnid=};
+next if $ref =~ m{\bwww\.live\.com/};
+next if $ref =~ m{\btheinvestblog\.com/?};
+next if $ref =~ m{\baimtrust\.com/};
+next if $ref =~ m{\braypharma\.com/};
+next if $seen{$ref}++;
+$date =~ s/^\[//;
+print "$date $ref";

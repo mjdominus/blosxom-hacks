@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+use Time::Local;
+use Getopt::Std;
+getopts('n');
+
+my %m2n = (jan => 0, feb => 1, mar => 2, apr => 3,
+	   may => 4, jun => 5, jul => 6, aug => 7,
+           sep => 8, oct => 9, nov => 10, dec => 11, );
+
+if (@ARGV == 0 && -t STDIN) {
+  @ARGV = qw(/usr/local/apache/logs/access_log);
+} else {
+  @ARGV = map { $_ =~ /\.gz$/ ? "gzip -dc $_ |" : $_ } @ARGV;
+}
+
+while (<>) {
+  @fields = split;
+  my ($date, $ip, $doc) = @fields[3, 0, 6];
+#  next unless $doc =~ m{/blog/};
+  $date =~ s/:.*//;
+  $date =~ s/^\[//;
+  $x{$date}{$ip} = 1;
+  push @dates, $date unless $seen{$date}++;
+  $lastdate = $date;
+}
+
+my $sec_today = do { 
+  my ($s, $m, $h) = localtime;
+  $h * 3600 + $m * 60 + $s;
+};
+
+
+for my $date (@dates) {
+  my $naddrs = keys %{$x{$date}};
+  if ($date eq $lastdate && ! $opt_n) {
+    printf "%11s %5d (%5d)\n", $date, $naddrs, 
+        $naddrs * 86400 / $sec_today;
+  } else {
+    if ($opt_n) {
+      my ($d, $m, $y) = split m{/}, $date;
+      $date = $d + 32 * ($m2n{lc $m} + 12 * $y);
+      printf "%11s %5d\n", $date, $naddrs;
+    } else {
+      printf "%11s %5d\n", $date, $naddrs;
+    }
+  }
+  $TOTAL += $naddrs;
+  for my $k (keys %{$x{$date}}) { $y{$k} = 1 }
+}
+
+#printf "%11s %6d / %6d = %5.2f\n", "TOTAL", scalar(keys %y), $TOTAL,
+#    100 * keys(%y)/ $TOTAL;
+unless ($opt_n) {
+  printf "%11s %6d\n", "TOTAL", scalar(keys %y);
+}
+
+

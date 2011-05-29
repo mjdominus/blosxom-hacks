@@ -1,0 +1,8 @@
+
+require "point";
+
+define line {
+  point start, end, center;
+  constraints { center = (start + end)/2; }
+  draw { &draw_line; } 
+}

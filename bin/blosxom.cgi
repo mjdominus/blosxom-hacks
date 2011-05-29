@@ -1,0 +1,1 @@
+/home/mjd/src/perl/blosxom/blosxom.cgi

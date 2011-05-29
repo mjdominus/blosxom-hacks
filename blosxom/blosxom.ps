@@ -1,0 +1,849 @@
+%!PS-Adobe-3.0
+%%Creator: A2ps version 4.2
+%%CreationDate: Thu Feb  2 15:35:14 2006
+%%Pages: (atend)
+%%DocumentFonts: Courier Courier-Bold Helvetica Helvetica-Bold
+%%EndComments
+% Copyright (c) 1992, 1993, Miguel Santana, santana@imag.fr
+
+/$a2psdict 100 dict def
+$a2psdict begin
+
+% General macros.
+/xdef {exch def} bind def
+/getfont {exch findfont exch scalefont} bind def
+
+% Create Courier backspace font
+/backspacefont {
+    /Courier findfont dup length dict begin
+	{ % forall
+	    1 index /FID eq { pop pop } { def } ifelse
+	} forall
+	currentdict /UniqueID known { % if
+	    /UniqueID UniqueID 16#800000 xor def
+	} if
+	CharStrings length 1 add dict begin
+	    CharStrings { def } forall
+	    /backspace { -600 0 0 0 0 0 setcachedevice } bind def
+	    currentdict
+	end
+	/CharStrings exch def
+	/Encoding Encoding 256 array copy def
+	Encoding 8 /backspace put
+	currentdict
+    end
+    definefont pop
+} bind def
+
+% FUNCTIONS
+
+% Function newfile: Initialize file printing.
+/newfile
+{ /filenm xdef
+  /filenmwidth filenm stringwidth pop def
+  /filenmfont
+       filenmwidth filenmroom gt
+       {
+	       filenmfontname
+	       filenmfontsize filenmroom mul filenmwidth div
+	     getfont
+       }
+       { stdfilenmfont }
+     ifelse
+  def
+} bind def
+
+% Function header: prints page header. no page
+% is passed as argument.
+/header
+  { upperx side get  uppery side get headersize sub 1 add  moveto
+    datefont setfont
+    gsave
+      upperx side get uppery side get moveto
+      0 headersize 2 div neg rmoveto 
+      headersize setlinewidth
+      0.95 setgray
+      pagewidth 0 rlineto stroke
+    grestore
+    gsave
+      datefontsize headermargin rmoveto
+      date show				% date/hour
+    grestore
+    gsave
+      pnum cvs pop				% page pop up
+        pagewidth (Page 999) stringwidth pop sub
+        headermargin
+	  rmoveto
+      (Page ) show pnum show		% page number
+    grestore
+    empty pnum copy pop
+    gsave
+      filenmfont setfont
+         filenmroom filenm stringwidth pop sub 2 div datewidth add
+          bodymargin 2 mul 
+        add 
+        headermargin
+      rmoveto
+        filenm show			% file name
+      grestore
+    } bind def
+
+% Function border: prints border page
+/border 
+{ upperx side get uppery side get moveto
+  gsave				% print four sides
+    0.7 setlinewidth		% of the square
+    pagewidth 0 rlineto
+    0 pageheight neg rlineto
+    pagewidth neg 0 rlineto
+    closepath stroke
+  grestore
+} bind def
+
+% Function hborder: completes border of the header.
+/hborder 
+{ gsave
+	0.7 setlinewidth
+	0 headersize neg rmoveto
+	pagewidth 0 rlineto
+	stroke
+  grestore
+} bind def
+
+% Function sheetnumber: prints the sheet number.
+/sheetnumber
+    { sheetnumberx sheetnumbery moveto
+      datefont setfont
+      pnum cvs
+	  dup stringwidth pop (0) stringwidth pop sub neg 0 rmoveto show
+      empty pnum copy pop
+    } bind def
+
+% Function prlogin: prints the login id of the requestor.
+/prlogin
+    { loginx loginy moveto
+      datefont setfont
+      dup stringwidth pop neg 0 rmoveto show
+    } bind def
+
+% Function currentdate: prints the current date.
+/currentdate
+    { datex datey moveto
+      datefont setfont
+      (Printed: ) show
+      currdate show
+    } bind def
+
+% Function filename_footer: prints the file name at bottom of page.
+/filenamefooter
+    { filenamefooterx filenamefootery moveto
+      datefont setfont
+      filenm center show
+    } bind def
+
+% Function center: centers text.
+/center
+    { dup stringwidth pop
+      2 div neg 0 rmoveto
+    } bind def
+
+% Function s: print a source line
+/s  { show
+      /y0 y0 bodyfontsize sub def
+      x0 y0 moveto
+    } bind def
+
+% Functions b and st: change to bold or standard font
+/b  { show
+      boldfont setfont
+    } bind def
+/st { show
+      bodyfont setfont
+    } bind def
+
+% Strings used to make easy printing numbers
+/pnum 12 string def
+/empty 12 string def
+
+% Global initializations
+
+/CourierBack backspacefont
+/filenmfontname /Helvetica-Bold def
+/inch {72 mul} bind def
+
+% Initialize page description variables.
+/x0 0 def
+/y0 0 def
+/sheetheight 11 inch def
+/sheetwidth 8.5 inch def
+/margin 1.4 inch def
+/rightmargin margin 3 div def
+/leftmargin margin 2 mul 3 div def
+/twinfiles false def
+/date () def
+/currdate (Feb  2 2006 15:35) def
+/login (Printed from plover.com) def
+%%EndProlog
+
+/docsave save def
+/landscape false def
+/twinpages false def
+% Character size for fonts.
+/filenmfontsize 15 def
+/datefontsize filenmfontsize 0.8 mul def
+/datefont /Helvetica datefontsize getfont def
+/datewidth datefont setfont currdate stringwidth pop def
+/stdfilenmfont filenmfontname filenmfontsize getfont def
+/headermargin filenmfontsize 0.25 mul def
+/headersize 0.29 inch def
+/bodyfontsize 9.95455 def
+/bodyfont /CourierBack bodyfontsize getfont def
+/boldfont /Courier-Bold bodyfontsize getfont def
+/bodymargin bodyfontsize 0.7 mul def
+/bodyfont /CourierBack bodyfontsize getfont def
+/lines 66 def
+/columns 84 def
+
+% Logical page attributs (a half of a sheet).
+/pagewidth
+   bodyfont setfont (0) stringwidth pop columns mul bodymargin dup add add
+   def
+/pageheight
+   bodyfontsize lines mul bodymargin dup add add headersize add
+   def
+/filenmroom
+      pagewidth
+      filenmfontsize 4 mul datewidth add (Page 999) stringwidth pop add
+    sub
+  def
+
+% Coordinates for upper corner of a logical page and for
+% sheet number. Coordinates depend on format mode used.
+/topmargin margin twinpages {3} {2} ifelse div def
+/side 0 def
+
+% Portrait format
+/upperx [ leftmargin dup ] def
+/sheetnumbery topmargin datefontsize 2 mul sub def
+/sheetnumberx sheetwidth rightmargin sub datefontsize sub def
+/datey sheetnumbery def
+/datex leftmargin def
+
+% Only one logical page
+/uppery [ sheetheight topmargin sub dup ] def
+/datey sheetnumbery def
+/datex leftmargin def
+/sheetcenterx sheetwidth 2 div def
+/filenamefootery datey def
+/filenamefooterx sheetcenterx def
+/loginy filenmfontsize 2 div uppery side get add def
+/loginx sheetnumberx def
+/date (Feb  1 2006 22:54) def
+(blosxom.cgi) newfile
+%%Page: 1 1
+1 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+( #!/usr/bin/perl) s
+( ) s
+( # Blosxom) s
+( # Author: Rael Dornfest <rael@oreilly.com>) s
+( # Version: 2.0) s
+( # Home/Docs/Licensing: http://www.raelity.org/apps/blosxom/) s
+( ) s
+( package blosxom;) s
+( ) s
+( # --- Configurable variables -----) s
+( ) s
+( # What's this blog's title?) s
+( $blog_title = "The Universe of Discourse";) s
+( ) s
+( # What's this blog's description \(for outgoing RSS feed\)?) s
+( $blog_description = "The Universe of Discourse \(Mark Dominus Blog\)";) s
+( ) s
+( # What's this blog's primary language \(for outgoing RSS feed\)?) s
+( $blog_language = "en";) s
+( ) s
+( # Where are this blog's entries kept?) s
+( $datadir = "/home/mjd/misc/blog/entries";) s
+( ) s
+( # What's my preferred base URL for this blog \(leave blank for automatic\)?) s
+( $url = "http://www.plover.com/blog";) s
+( ) s
+( # Should I stick only to the datadir for items or travel down the) s
+( # directory hierarchy looking for items?  If so, to what depth?) s
+( # 0 = infinite depth \(aka grab everything\), 1 = datadir only, n = n levels down) s
+( $depth = 0;) s
+( ) s
+( # How many entries should I show on the home page?) s
+( $num_entries = 12;) s
+( ) s
+( # What file extension signifies a blosxom entry?) s
+( $file_extension = "blog";) s
+( ) s
+( # What is the default flavour?) s
+( $default_flavour = "html";) s
+( ) s
+( # Should I show entries from the future \(i.e. dated after now\)?) s
+( $show_future_entries = 0;) s
+( ) s
+( # --- Plugins \(Optional\) -----) s
+( ) s
+( # Where are my plugins kept?) s
+( $plugin_dir = "/home/mjd/src/perl/blosxom/plugins";) s
+( ) s
+( # Where should my modules keep their state information?) s
+( $plugin_state_dir = "$plugin_dir/state";) s
+( ) s
+( # --- Static Rendering -----) s
+( ) s
+( # Where are this blog's static files to be created?) s
+( $static_dir = "/home/mjd/misc/blog/static";) s
+( ) s
+( # What's my administrative password \(you must set this for static rendering\)?) s
+( $static_password = "blurfl";) s
+( ) s
+( # What flavours should I generate statically?) s
+( @static_flavours = qw/html rss atom/;) s
+( ) s
+( # Should I statically generate individual entries?) s
+( # 0 = no, 1 = yes) s
+( $static_entries = 1;) s
+( ) s
+/side 0 def
+1 sheetnumber
+showpage
+%%Page: 2 2
+2 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+( # --------------------------------) s
+( ) s
+( use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %t) s
+( emplate $template $depth $num_entries $file_extension $default_flavour $static_or_dy) s
+( namic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @) s
+( static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da) s
+(  $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $e) s
+( ntries $output $header $show_future_entries %files %indexes %others !;) s
+( ) s
+( use strict;) s
+( use FileHandle;) s
+( use File::Find;) s
+( use File::stat;) s
+( use Time::localtime;) s
+( use CGI qw/:standard :netscape/;) s
+( ) s
+( $version = "2.0";) s
+( ) s
+( my $fh = new FileHandle;) s
+( ) s
+( %month2num = \(nil=>'00', Jan=>'01', Feb=>'02', Mar=>'03', Apr=>'04', May=>'05', Jun) s
+( =>'06', Jul=>'07', Aug=>'08', Sep=>'09', Oct=>'10', Nov=>'11', Dec=>'12'\);) s
+( @num2month = sort { $month2num{$a} <=> $month2num{$b} } keys %month2num;) s
+( ) s
+( # Use the stated preferred URL or figure it out automatically) s
+( $url ||= url\(\);) s
+( $url =~ s/^included:/http:/; # Fix for Server Side Includes \(SSI\)) s
+( $url =~ s!/$!!;) s
+( ) s
+( # Drop ending any / from dir settings) s
+( $datadir =~ s!/$!!; $plugin_dir =~ s!/$!!; $static_dir =~ s!/$!!;) s
+(   ) s
+( # Fix depth to take into account datadir's path) s
+( $depth and $depth += \($datadir =~ tr[/][]\) - 1;) s
+( ) s
+( # Global variable to be used in head/foot.{flavour} templates) s
+( $path_info = '';) s
+( ) s
+( $static_or_dynamic = \(!$ENV{GATEWAY_INTERFACE} and param\('-password'\) and $static_p) s
+( assword and param\('-password'\) eq $static_password\) ? 'static' : 'dynamic';) s
+( $static_or_dynamic eq 'dynamic' and param\(-name=>'-quiet', -value=>1\);) s
+( ) s
+( # Path Info Magic) s
+( # Take a gander at HTTP's PATH_INFO for optional blog name, archive yr/mo/day) s
+( my @path_info = split m{/}, path_info\(\) || param\('path'\); ) s
+( shift @path_info;) s
+( ) s
+( while \($path_info[0] and $path_info[0] =~ /^[a-zA-Z].*$/ and $path_info[0] !~ /\(.*\)) s
+( \\.\(.*\)/\) { $path_info .= '/' . shift @path_info; }) s
+( ) s
+( # Flavour specified by ?flav={flav} or index.{flav}) s
+( $flavour = '';) s
+( ) s
+( if \( $path_info[$#path_info] =~ /\(.+\)\\.\(.+\)$/ \) {) s
+(   $flavour = $2;) s
+(   $1 ne 'index' and $path_info .= "/$1.$2";) s
+(   pop @path_info;) s
+( } else {) s
+(   $flavour = param\('flav'\) || $default_flavour;) s
+( }) s
+( ) s
+( # Strip spurious slashes) s
+( $path_info =~ s!\(^/*\)|\(/*$\)!!g;) s
+( ) s
+( # Date fiddling) s
+( \($path_info_yr,$path_info_mo,$path_info_da\) = @path_info;) s
+/side 0 def
+2 sheetnumber
+showpage
+%%Page: 3 3
+3 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+( $path_info_mo_num = $path_info_mo ? \( $path_info_mo =~ /\\d{2}/ ? $path_info_mo:  \($) s
+( month2num{ucfirst\(lc $path_info_mo\)} || undef\) \) : undef;) s
+( ) s
+( # Define standard template subroutine, plugin-overridable at Plugins: Template) s
+( $template = ) s
+(   sub {) s
+(     my \($path, $chunk, $flavour\) = @_;) s
+( ) s
+(     do {) s
+(       return join '', <$fh> if $fh->open\("< $datadir/$path/$chunk.$flavour"\);) s
+(     } while \($path =~ s/\(\\/*[^\\/]*\)$// and $1\);) s
+( ) s
+(     return join '', \($template{$flavour}{$chunk} || $template{error}{$chunk} || ''\)) s
+( ;) s
+(   };) s
+( # Bring in the templates) s
+( %template = \(\);) s
+( while \(<DATA>\) {) s
+(   last if /^\(__END__\)?$/;) s
+(   my\($ct, $comp, $txt\) = /^\(\\S+\)\\s\(\\S+\)\\s\(.*\)$/;) s
+(   $txt =~ s/\\\\n/\\n/mg;) s
+(   $template{$ct}{$comp} = $txt;) s
+( }) s
+( ) s
+( # Plugins: Start) s
+( if \( $plugin_dir and opendir PLUGINS, $plugin_dir \) {) s
+(   foreach my $plugin \( grep { /^\\w+$/ && -f "$plugin_dir/$_"  } sort readdir\(PLUGIN) s
+( S\) \) {) s
+(     my\($plugin_name, $off\) = $plugin =~ /^\\d*\(\\w+?\)\(_?\)$/;) s
+(     my $on_off = $off eq '_' ? -1 : 1;) s
+(     require "$plugin_dir/$plugin";) s
+(     $plugin_name->start\(\) and \( $plugins{$plugin_name} = $on_off \) and push @plugin) s
+( s, $plugin_name;) s
+(   }) s
+(   closedir PLUGINS;) s
+( }) s
+( ) s
+( # Plugins: Template) s
+( # Allow for the first encountered plugin::template subroutine to override the) s
+( # default built-in template subroutine) s
+( my $tmp; foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\(') s
+( template'\) and defined\($tmp = $plugin->template\(\)\) and $template = $tmp and last; }) s
+( ) s
+( # Provide backward compatibility for Blosxom < 2.0rc1 plug-ins) s
+( sub load_template {) s
+(   return &$template\(@_\);) s
+( }) s
+( ) s
+( my %dates;) s
+( sub timeof {) s
+(   my $f = shift;) s
+( #  return $dates{$f} = stat\($f\)->mtime;) s
+(   unless \(%dates\) {) s
+(     open my\($D\), "<", "$plugin_state_dir/dates" or return stat\($f\)->mtime;) s
+(     local $_;) s
+(     while \(<$D>\) {) s
+(       chomp;) s
+(       my \($d, $f\) = split /\\s+/, $_, 2;) s
+(       $dates{$f} = $d;) s
+(     }) s
+(   }) s
+(   return $dates{$f} if exists $dates{$f};) s
+(   return $dates{$f} = stat\($f\)->mtime;) s
+( }) s
+( ) s
+( # Define default find subroutine) s
+/side 0 def
+3 sheetnumber
+showpage
+%%Page: 4 4
+4 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+( $entries =) s
+(   sub {) s
+(     my\(%files, %indexes, %others\);) s
+(     find\() s
+(       sub {) s
+(         my $d; ) s
+(         my $curr_depth = $File::Find::dir =~ tr[/][]; ) s
+(         return if $depth and $curr_depth > $depth; ) s
+(      ) s
+(         if \( ) s
+(           # a match) s
+(           $File::Find::name =~ m!^$datadir/\(?:\(.*\)/\)?\(.+\)\\.$file_extension$!) s
+(           # not an index, .file, and is readable) s
+(           and $2 ne 'index' and $2 !~ /^\\./ and \(-r $File::Find::name\)) s
+(         \) {) s
+( ) s
+(             # to show or not to show future entries) s
+(             \( ) s
+(               $show_future_entries) s
+(               or timeof\($File::Find::name\) < time ) s
+(             \)) s
+( ) s
+(               # add the file and its associated mtime to the list of files) s
+(               and $files{$File::Find::name} = timeof\($File::Find::name\)) s
+( ) s
+(                 # static rendering bits) s
+(                 and \() s
+(                   param\('-all'\) ) s
+(                   or !-f "$static_dir/$1/index." . $static_flavours[0]) s
+(                   or timeof\("$static_dir/$1/index." . $static_flavours[0]\) < stat\($) s
+( File::Find::name\)->mtime) s
+(                 \)) s
+(                   and $indexes{$1} = 1) s
+(                     and $d = join\('/', \(nice_date\($files{$File::Find::name}\)\)[5,2,3) s
+( ]\)) s
+(   ) s
+(                       and $indexes{$d} = $d) s
+(                         and $static_entries and $indexes{ \($1 ? "$1/" : ''\) . "$2.$) s
+( file_extension" } = 1) s
+( ) s
+(             } ) s
+(             else {) s
+(               !-d $File::Find::name and -r $File::Find::name and $others{$File::Fin) s
+( d::name} = timeof\($File::Find::name\)) s
+(             }) s
+(       }, $datadir) s
+(     \);) s
+( ) s
+(     return \(\\%files, \\%indexes, \\%others\);) s
+(   };) s
+( ) s
+( # Plugins: Entries) s
+( # Allow for the first encountered plugin::entries subroutine to override the) s
+( # default built-in entries subroutine) s
+( my $tmp; foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\(') s
+( entries'\) and defined\($tmp = $plugin->entries\(\)\) and $entries = $tmp and last; }) s
+( ) s
+( my \($files, $indexes, $others\) = &$entries\(\);) s
+( %files = %$files; %indexes = %$indexes; %others = ref $others ? %$others : \(\);) s
+( ) s
+( # Plugins: Filter) s
+( foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('filter'\) ) s
+( and $entries = $plugin->filter\(\\%files, \\%others\) }) s
+( ) s
+( # Static) s
+( if \(!$ENV{GATEWAY_INTERFACE} and param\('-password'\) and $static_password and param\() s
+/side 0 def
+4 sheetnumber
+showpage
+%%Page: 5 5
+5 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+( '-password'\) eq $static_password\) {) s
+( ) s
+(   param\('-quiet'\) or print "Blosxom is generating static index pages...\\n";) s
+( ) s
+(   # Home Page and Directory Indexes) s
+(   my %done;) s
+(   foreach my $path \( sort keys %indexes\) {) s
+(     my $p = '';) s
+(     foreach \( \('', split /\\//, $path\) \) {) s
+(       $p .= "/$_";) s
+(       $p =~ s!^/!!;) s
+(       $path_info = $p;) s
+(       $done{$p}++ and next;) s
+(       \(-d "$static_dir/$p" or $p =~ /\\.$file_extension$/\) or mkdir "$static_dir/$p") s
+( , 0755;) s
+(       foreach $flavour \( @static_flavours \) {) s
+(         my $content_type = \(&$template\($p,'content_type',$flavour\)\);) s
+(         $content_type =~ s!\\n.*!!s;) s
+(         my $fn = $p =~ m!^\(.+\)\\.$file_extension$! ? $1 : "$p/index";) s
+(         param\('-quiet'\) or print "$fn.$flavour\\n";) s
+(         my $fh_w = new FileHandle "> $static_dir/$fn.$flavour" or die "Couldn't ope) s
+( n $static_dir/$p for writing: $!";  ) s
+(         $output = '';) s
+(         print $fh_w ) s
+(           $indexes{$path} == 1) s
+(             ? &generate\('static', $p, '', $flavour, $content_type\)) s
+(             : &generate\('static', '', $p, $flavour, $content_type\);) s
+(         $fh_w->close;) s
+(       }) s
+(     }) s
+(   }) s
+( }) s
+( ) s
+( # Dynamic) s
+( else {) s
+(   my $content_type = \(&$template\($path_info,'content_type',$flavour\)\);) s
+(   $content_type =~ s!\\n.*!!s;) s
+( ) s
+(   $header = {-type=>$content_type};) s
+( ) s
+(   print generate\('dynamic', $path_info, "$path_info_yr/$path_info_mo_num/$path_info) s
+( _da", $flavour, $content_type\);) s
+( }) s
+( ) s
+( # Plugins: End) s
+( foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('end'\) and) s
+(  $entries = $plugin->end\(\) }) s
+( ) s
+( # Generate ) s
+( sub generate {) s
+(   my\($static_or_dynamic, $currentdir, $date, $flavour, $content_type\) = @_;) s
+( ) s
+(   my %f = %files;) s
+( ) s
+(   # Plugins: Skip) s
+(   # Allow plugins to decide if we can cut short story generation) s
+(   my $skip; foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->ca) s
+( n\('skip'\) and defined\($tmp = $plugin->skip\(\)\) and $skip = $tmp and last; }) s
+(   ) s
+(   # Define default interpolation subroutine) s
+(   $interpolate = ) s
+(     sub {) s
+(       package blosxom;) s
+(       my $template = shift;) s
+(       $template =~ ) s
+(         s/\(\\$\\w+\(?:::\)?\\w*\)/"defined $1 ? $1 : ''"/gee;) s
+/side 0 def
+5 sheetnumber
+showpage
+%%Page: 6 6
+6 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+(       return $template;) s
+(     };  ) s
+( ) s
+(   unless \(defined\($skip\) and $skip\) {) s
+( ) s
+(     # Plugins: Interpolate) s
+(     # Allow for the first encountered plugin::interpolate subroutine to ) s
+(     # override the default built-in interpolate subroutine) s
+(     my $tmp; foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->c) s
+( an\('interpolate'\) and defined\($tmp = $plugin->interpolate\(\)\) and $interpolate = $tmp) s
+(  and last; }) s
+(         ) s
+(     # Head) s
+(     my $head = \(&$template\($currentdir,'head',$flavour\)\);) s
+(   ) s
+(     # Plugins: Head) s
+(     foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('head') s
+( \) and $entries = $plugin->head\($currentdir, \\$head\) }) s
+(   ) s
+(     $head = &$interpolate\($head\);) s
+(   ) s
+(     $output .= $head;) s
+(     ) s
+(     # Stories) s
+(     my $curdate = '';) s
+(     my $ne = $num_entries;) s
+( ) s
+(     if \( $currentdir =~ /\(.*?\)\([^\\/]+\)\\.\(.+\)$/ and $2 ne 'index' \) {) s
+(       $currentdir = "$1$2.$file_extension";) s
+(       $files{"$datadir/$1$2.$file_extension"} and %f = \( "$datadir/$1$2.$file_exten) s
+( sion" => $files{"$datadir/$1$2.$file_extension"} \);) s
+(     } ) s
+(     else { ) s
+(       $currentdir =~ s!/index\\..+$!!;) s
+(     }) s
+( ) s
+(     # Define a default sort subroutine) s
+(     my $sort = sub {) s
+(       my\($files_ref\) = @_;) s
+(       return sort { $files_ref->{$b} <=> $files_ref->{$a} } keys %$files_ref;) s
+(     };) s
+(   ) s
+(     # Plugins: Sort) s
+(     # Allow for the first encountered plugin::sort subroutine to override the) s
+(     # default built-in sort subroutine) s
+(     my $tmp; foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->c) s
+( an\('sort'\) and defined\($tmp = $plugin->sort\(\)\) and $sort = $tmp and last; }) s
+(   ) s
+(     foreach my $path_file \( &$sort\(\\%f, \\%others\) \) {) s
+(       last if $ne <= 0 && $date !~ /\\d/;) s
+(       use vars qw/ $path $fn /;) s
+(       \($path,$fn\) = $path_file =~ m!^$datadir/\(?:\(.*\)/\)?\(.*\)\\.$file_extension!;) s
+(   ) s
+(       # Only stories in the right hierarchy) s
+(       $path =~ /^$currentdir/ or $path_file eq "$datadir/$currentdir" or next;) s
+(   ) s
+(       # Prepend a slash for use in templates only if a path exists) s
+(       $path &&= "/$path";) s
+( ) s
+(       # Date fiddling for by-{year,month,day} archive views) s
+(       use vars qw/ $dw $mo $mo_num $da $ti $yr $hr $min $hr12 $ampm /;) s
+(       \($dw,$mo,$mo_num,$da,$ti,$yr\) = nice_date\($files{"$path_file"}\);) s
+(       \($hr,$min\) = split /:/, $ti;) s
+(       \($hr12, $ampm\) = $hr >= 12 ? \($hr - 12,'pm'\) : \($hr, 'am'\); ) s
+(       $hr12 =~ s/^0//; $hr12 == 0 and $hr12 = 12;) s
+(   ) s
+/side 0 def
+6 sheetnumber
+showpage
+%%Page: 7 7
+7 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+(       # Only stories from the right date) s
+(       my\($path_info_yr,$path_info_mo_num, $path_info_da\) = split /\\//, $date;) s
+(       next if $path_info_yr && $yr != $path_info_yr; last if $path_info_yr && $yr <) s
+(  $path_info_yr; ) s
+(       next if $path_info_mo_num && $mo ne $num2month[$path_info_mo_num];) s
+(       next if $path_info_da && $da != $path_info_da; last if $path_info_da && $da <) s
+(  $path_info_da; ) s
+(   ) s
+(       # Date ) s
+(       my $date = \(&$template\($path,'date',$flavour\)\);) s
+(       ) s
+(       # Plugins: Date) s
+(       foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('dat) s
+( e'\) and $entries = $plugin->date\($currentdir, \\$date, $files{$path_file}, $dw,$mo,$m) s
+( o_num,$da,$ti,$yr\) }) s
+(   ) s
+(       $date = &$interpolate\($date\);) s
+(   ) s
+(       $curdate ne $date and $curdate = $date and $output .= $date;) s
+(       ) s
+(       use vars qw/ $title $body $raw /;) s
+(       if \(-f "$path_file" && $fh->open\("< $path_file"\)\) {) s
+(         chomp\($title = <$fh>\);) s
+(         chomp\($body = join '', <$fh>\);) s
+(         $fh->close;) s
+(         $raw = "$title\\n$body";) s
+(       }) s
+(       my $story = \(&$template\($path,'story',$flavour\)\);) s
+(   ) s
+(       # Plugins: Story) s
+(       foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('sto) s
+( ry'\) and $entries = $plugin->story\($path, $fn, \\$story, \\$title, \\$body\) }) s
+(       ) s
+(       if \($content_type =~ m{\\Wxml$}\) {) s
+(         # Escape <, >, and &, and to produce valid RSS) s
+(         my %escape = \('<'=>'&lt;', '>'=>'&gt;', '&'=>'&amp;', '"'=>'&quot;'\);  ) s
+(         my $escape_re  = join '|' => keys %escape;) s
+(         $title =~ s/\($escape_re\)/$escape{$1}/g;) s
+(         $body =~ s/\($escape_re\)/$escape{$1}/g;) s
+(       }) s
+(   ) s
+(       $story = &$interpolate\($story\);) s
+(     ) s
+(       $output .= $story;) s
+(       $fh->close;) s
+(   ) s
+(       $ne--;) s
+(     }) s
+(   ) s
+(     # Foot) s
+(     my $foot = \(&$template\($currentdir,'foot',$flavour\)\);) s
+(   ) s
+(     # Plugins: Foot) s
+(     foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('foot') s
+( \) and $entries = $plugin->foot\($currentdir, \\$foot\) }) s
+(   ) s
+(     $foot = &$interpolate\($foot\);) s
+(     $output .= $foot;) s
+( ) s
+(     # Plugins: Last) s
+(     foreach my $plugin \( @plugins \) { $plugins{$plugin} > 0 and $plugin->can\('last') s
+( \) and $entries = $plugin->last\(\) }) s
+( ) s
+(   } # End skip) s
+( ) s
+(   # Finally, add the header, if any and running dynamically) s
+/side 0 def
+7 sheetnumber
+showpage
+%%Page: 8 8
+8 header
+border
+hborder
+/x0 upperx 0 get bodymargin add def
+/y0 uppery 0 get bodymargin bodyfontsize add headersize add sub def
+x0 y0 moveto
+bodyfont setfont
+(   $static_or_dynamic eq 'dynamic' and $header and $output = header\($header\) . $outp) s
+( ut;) s
+(   ) s
+(   $output;) s
+( }) s
+( ) s
+( ) s
+( sub nice_date {) s
+(   my\($unixtime\) = @_;) s
+(   ) s
+(   my $c_time = ctime\($unixtime\);) s
+(   my\($dw,$mo,$da,$ti,$yr\) = \( $c_time =~ /\(\\w{3}\) +\(\\w{3}\) +\(\\d{1,2}\) +\(\\d{2}:\\d{2}) s
+( \):\\d{2} +\(\\d{4}\)$/ \);) s
+(   $da = sprintf\("%02d", $da\);) s
+(   my $mo_num = $month2num{$mo};) s
+(   ) s
+(   return \($dw,$mo,$mo_num,$da,$ti,$yr\);) s
+( }) s
+( ) s
+( ) s
+( # Default HTML and RSS template bits) s
+( __DATA__) s
+( html content_type text/html) s
+( html head <html><head><link rel="alternate" type="type="application/rss+xml" title=) s
+( "RSS" href="$url/index.rss" /><title>$blog_title $path_info_da $path_info_mo $path_i) s
+( nfo_yr</title></head><body><center><font size="+3">$blog_title</font><br />$path_inf) s
+( o_da $path_info_mo $path_info_yr</center><p />) s
+( html story <p><a name="$fn"><b>$title</b></a><br />$body<br /><br />posted at: $ti ) s
+( | path: <a href="$url$path">$path</a> | <a href="$url/$yr/$mo_num/$da#$fn">permanent) s
+(  link to this entry</a></p>\\n) s
+( html date <h3>$dw, $da $mo $yr</h3>\\n) s
+( html foot <p /><center><a href="http://www.blosxom.com/"><img src="http://www.blosx) s
+( om.com/images/pb_blosxom.gif" border="0" /></a></body></html>) s
+( rss content_type text/xml) s
+( rss head <?xml version="1.0"?>\\n<!-- name="generator" content="blosxom/$version" --) s
+( >\\n<!DOCTYPE rss PUBLIC "-//Netscape Communications//DTD RSS 0.91//EN" "http://my.ne) s
+( tscape.com/publish/formats/rss-0.91.dtd">\\n\\n<rss version="0.91">\\n  <channel>\\n    ) s
+( <title>$blog_title $path_info_da $path_info_mo $path_info_yr</title>\\n    <link>$url) s
+( </link>\\n    <description>$blog_description</description>\\n    <language>$blog_langu) s
+( age</language>\\n) s
+( rss story   <item>\\n    <title>$title</title>\\n    <link>$url/$yr/$mo_num/$da#$fn</) s
+( link>\\n    <description>$body</description>\\n  </item>\\n) s
+( rss date \\n) s
+( rss foot   </channel>\\n</rss>) s
+( error content_type text/html) s
+( error head <html><body><p><font color="red">Error: I'm afraid this is the first I'v) s
+( e heard of a "$flavour" flavoured Blosxom.  Try dropping the "/+$flavour" bit from t) s
+( he end of the URL.</font>\\n\\n) s
+( error story <p><b>$title</b><br />$body <a href="$url/$yr/$mo_num/$da#fn.$default_f) s
+( lavour">#</a></p>\\n) s
+( error date <h3>$dw, $da $mo $yr</h3>\\n) s
+( error foot </body></html>) s
+( __END__) s
+/side 0 def
+8 sheetnumber
+showpage
+
+%%Trailer
+%%Pages: 8
+docsave restore end

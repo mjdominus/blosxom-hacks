@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+use LWP::UserAgent;
+use HTTP::Request;
+use HTTP::Response;
+
+my $ua = LWP::UserAgent->new;
+while (my $url = <DATA>) {
+  chomp $url;
+  my $q = HTTP::Request->new("POST");
+  $q->url($url);
+  my $content = do { local $/ = "";
+                     <DATA>;
+                   };
+
+  $q->content($content);
+  my $result = $ua->request($q);
+  unless ($result->is_success) {
+    print "Ping to $url failed: ", $result->code, "\n";
+    print "    ",  $result->message, "\n";
+  }
+}
+
+
+__DATA__
+http://rpc.weblogs.com/RPC2
+<?xml version="1.0"?>
+ <methodCall>
+  <methodName>weblogUpdates.ping</methodName>
+  <params>
+   <param>
+    <value>The Universe of Discourse</value>
+   </param>
+   <param>
+    <value>http://blog.plover.com/</value>
+   </param>
+  </params>
+ </methodCall>
+
+
+http://rpc.technorati.com/rpc/ping
+<?xml version="1.0"?>
+<methodCall>
+  <methodName>weblogUpdates.ping</methodName>
+  <params>
+    <param>
+      <value>The Universe of Discourse</value>
+    </param>
+    <param>
+      <value>http://blog.plover.com</value>
+    </param>
+  </params>
+</methodCall>

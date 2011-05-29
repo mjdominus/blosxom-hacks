@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+use Getopt::Std;
+
+# -p : push pictures only
+getopts('mp');
+$ENV{PATH} = join ":", "/home/mjd/misc/blog/bin", "/home/mjd/src/perl/blosxom",
+  $ENV{PATH};
+$opt_m = 1;
+
+chomp(my @pic_exclude = <DATA>);
+if ($opt_p) {
+run_command("rsync", map(qq{--exclude=$_}, @pic_exclude), "-ravz",
+            "--delete", "--rsh=ssh -P",
+            "/home/mjd/public_html/pictures/blog/",
+            "newbabe.pobox.com:html/pictures/blog/");
+}
+
+run_command("rsync", "-ravz", "--delete", "--rsh=ssh -P", 
+            "/home/mjd/misc/blog/moved/",
+            "newbabe.pobox.com:html/blog/") unless $opt_p;
+
+exit if $opt_m || $opt_p;
+
+warn "pinging...\n";
+run_command("tping");
+
+sub run_command {
+  warn join(" ", @_), "\n";
+  unless (system(@_) == 0) {
+    my $stat = $? / 265;
+    warn "... exited with status $stat";
+    exit 1;
+  }
+}
+
+__DATA__
+*.tif
+*.p[bgpn]m

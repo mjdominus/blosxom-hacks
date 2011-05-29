@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+$\ = "\n";
+use File::Find;
+use Getopt::Std;
+getopts('n');
+
+sub blog {
+  my $z = $_;
+  return if /^\./;
+  return unless $z =~ s/\.blog$/\.notyet/;
+  return if -e $z;
+  print $File::Find::name;
+}
+
+sub notyet {
+  return if /^\./;
+  return unless /\.notyet$/;
+  print $File::Find::name;
+}
+
+sub filter {
+  return if /^\./;
+  return unless -f;
+  if ($opt_n) {
+    return unless /\.(blog|notyet)$/  ;
+    (my $notyet = $_) =~ s/\.\w+$/.notyet/;
+    (my $main = $_) =~ s/\.\w+$/.blog/;
+    my $other = $main eq $_ ? $notyet : $main;
+    print $File::Find::name if -e $notyet && (! -e $main || -s $other < -s $_ || -s $main == -s $other && $main eq $notyet);
+  } else {
+    return unless /\.blog$/  ;
+    my $notyet = $_;
+    $notyet =~ s/\.blog$/.notyet/;
+    print $File::Find::name if ! -e $notyet; 
+  }
+}
+
+find( \&filter,
+        "/home/mjd/misc/blog/entries" );

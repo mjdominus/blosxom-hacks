@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+
+use File::Basename;
+use Getopt::Std;
+$ENV{PS2GIFSCALE} = "0.2";
+$ENV{PATH} .= ":/home/mjd/bin";
+my ($PREFIX, $SUFFIX) = do { local $/; my@a = split /^-{32,}\n/m, <DATA>; @a };
+getopts('t:ro:') or usage();
+usage() if $opt_r && ! $opt_t;
+my $workdir = "/tmp/formulas.$<";
+-d $workdir or mkdir $workdir or die "$workdir: $!";
+my $target_dir = $opt_t;
+
+warn "FORMULA @ARGV\n";
+
+sub usage {
+  warn "Usage: $0 [-r] [-t target_dir] [-o output_file_name] files
+process files and manufacture GIF images.  deposit results into
+target_dir.  Output files have the same names as input files,
+with suffixes changed.  
+
+-o means to read formula from stdin (instead of from named files) 
+and write stdout instead.
+
+-r means to regenerate only those files in the target directory that
+are out-of-date with respect to the source files.
+";
+
+  exit 1;
+}
+
+sub say { print STDERR @_  }
+
+if ($opt_o) {
+  do_file($opt_o, join "", <>);
+} else {
+  for my $file (@ARGV) {
+    my $short = basename($file);
+    
+    if ($opt_r) {
+      my $target = $short;
+      $target =~ s/\.\w+$/.gif/;
+      $target = "$target_dir/$target";
+      next if -e $target && -M $target <= -M $file;
+    }
+
+    unless (open F, "<", $file) {
+      warn "Couldn't open $file: $!; skipping";
+      next;
+    }
+    say "Doing file '$file'\n";
+    my $tex = join "", <F>;
+    do_file($short, $tex);
+  }
+}
+exit 0;
+
+sub do_file {
+  my ($output, $tex) = @_;
+  my $tx = tempfile($output, "tx");
+
+  # Don't bother, if work file already exists and contents have not changed
+  if (-e $tx) {
+    open T, "<", $tx or die "read old $tx: $!";
+    my $old = do { local $/; <T> };
+    return if $old eq $output;
+  }
+
+  open T, ">", $tx or die "open $tx: $!";
+  print T $PREFIX, $tex, $SUFFIX;
+  close T or die "close $tx: $!";
+  
+  do_cmd("tex --interaction nonstopmode $tx");
+
+  my $dvi = tempfile($output, "dvi");
+  my $ps  = tempfile($output, "ps");
+  do_cmd("dvips -o $ps $dvi");
+  
+  my $gif  = tempfile($output, "gif");
+  do_cmd("ps2gif < $ps > $gif ",
+         "giftrans -t white -o OUT $gif",
+         "mv OUT $gif");
+  do_cmd("mv $gif $target_dir") if defined $target_dir;
+}
+
+sub do_cmd {
+  my @cmd = @_;
+  for my $cmd (@cmd) {
+    warn $cmd, "\n";
+#    say $cmd, "\n";
+    my $rc = system("cd $workdir; $cmd");
+#    my $rc = system("cd $workdir; $cmd ");
+    if ($rc != 0) {
+      $rc /= 256;
+      warn "-- exited with status $rc\n";
+      exit 1;
+      return;
+    }
+  }
+  return 1;
+}
+
+sub tempfile {
+  my $name = shift;
+  my $suf = shift;
+  $name =~ s/\.\w+$//;
+  "$workdir/$name.$suf";
+}
+
+__DATA__
+\magnification 6000
+\nopagenumbers
+\overfullrule=0pt
+\hsize=3.5in
+----------------------------------------------------------------
+\vfill\supereject
+\end

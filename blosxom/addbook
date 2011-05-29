@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+my ($dir, $isbn, $title, $image) = @ARGV;
+
+defined($image) or usage();
+
+use DB_File;
+use Fcntl ':flock';
+my $bookdb = "$dir/books.db";
+my $booklock = "$dir/books.lock";
+open F, "+<", $booklock or die $!;
+flock F, LOCK_EX or die $!;
+tie my(%bookdb), 'DB_File', $bookdb, O_CREAT | O_RDWR or die $!;
+$bookdb{$isbn} = join $; , $title, $image;

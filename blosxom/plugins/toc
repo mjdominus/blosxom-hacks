@@ -1,0 +1,73 @@
+
+package toc;
+
+my $toc = "toc.blog";
+my $db = "$blosxom::plugin_state_dir/toc.db";
+my $target = $blosxom::datadir;
+my @articles; 
+
+sub start { 
+  open F, ">", "/tmp/toc.err";
+#  tie %TITLE, 'DB_File', O_RDWR | O_CREAT;
+  @articles = ();
+  return 1;
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+
+  my $file = "$path/$filename.$blosxom::flavour";
+#  $file = "$path/$filename";
+  $TITLE{$file} = $$title_ref;
+  if ($$title_ref =~ /\S/) {
+    push @articles, [$file, $$title_ref];
+    print F "Now has " . @articles . " article(s)\n";
+    print F "$file: $$title_ref\n";
+  }
+}
+
+sub num_entries {
+  my ($pkg, $dir, $date) = @_;
+  print F "n_entries: <$dir> <$date>\n";
+  return is_mainpage($dir, $date) ? undef : 
+         $blosxom::flavour eq "html" ? 1_000_000 : undef;
+}
+
+sub is_mainpage {
+  my ($dir, $date) = @_;
+  $dir !~ m{\w} && $date !~ m{\w};
+}
+
+sub foot {
+  my ($pkg, $dir, $footref, $date) = @_;
+
+  print F "TOC <$dir> <$date> has " . @articles . " article(s)\n";
+  my $TOC = "";
+  my @links;
+  for my $pair (sort {titlecmp($a->[1], $b->[1])} @articles) {
+    my ($path, $title) = @$pair;
+   
+    my $url = "$blosxom::url/$path";
+    $title =~ s/\bpi\b/&pi;/g;
+    push @links,  qq{<tr><td bgcolor="#ccccff"><a href="$url">$title</a>};
+  }
+  $TOC = join "\n", @links;
+#  $TOC =~ s/\bpi\b/&pi;/g;
+
+  $TOC = qq{<p>In this section:<br>
+            <table class="menuitem">$TOC</table></p>\n};
+
+  $TOC = "" if @links < 3 || is_mainpage($dir, $date);
+
+  $blosxom::output =~ s/BLOSXOM_HEADER_TOC/$TOC/g;
+  print F "Wrote " . @articles . " items in toc for $dir\n";
+  @articles = ();
+}
+
+sub titlecmp {
+  my ($a, $b) = @_;
+  for ($a, $b) { s/^(the|a|an)\s+//i; tr/a-zA-Z0-9//cd; }
+  lc($a) cmp lc($b);
+}
+
+1;

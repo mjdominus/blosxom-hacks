@@ -1,0 +1,19 @@
+
+package trimbody;
+my $TRIM = 400;
+
+sub start { 1 }
+
+sub story {
+  my $s = ${$_[5]};
+  $tb::trimstory = trim($s);
+}
+
+sub trim {
+  my $s = shift;
+  return $s if length($s) < $TRIM;
+  my $spos = index($s, " ", $TRIM);
+  substr($s, 0, $spos) . "...";
+}
+
+1;

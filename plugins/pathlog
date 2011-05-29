@@ -1,0 +1,23 @@
+package pathlog;
+
+my $output = "/tmp/blog-gen-log-$<";
+sub start {
+  open D, ">", $output or die $!;
+  print D "$$ ", scalar(localtime), "\n";
+  my ($fh) = select D;
+  $| = 1;
+  select $fh;
+  return 1;
+}
+
+# $pkg is always "pathlog"
+# $path is the directory 
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base, $datepath) = @_;
+  return unless $blosxom::flavour eq "html";
+  print D "$base $datepath $path $filename\n";
+}
+
+1;
+

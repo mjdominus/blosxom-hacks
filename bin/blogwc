@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+
+use lib '/home/mjd/misc/blog/plugins/lib';
+use Blosxom::MJD::Date;
+use File::Find;
+my $maxl = 0;
+
+my $date = Blosxom::MJD::Date->new;
+
+use Getopt::Std;
+getopts('ny:m:');
+my $opt_n = $opt_n ? "-n" : "";
+my $pat = shift || ".";
+$pat = qr/$pat/;
+if ($opt_m && ! $opt_y) {
+  $opt_y = (localtime)[5] + 1900;
+}
+
+open F, "blogfind $opt_n | sort |"
+    or die "Couldn't run find: $!; aborting";
+
+my $prefix = "/home/mjd/misc/blog/entries";
+
+while (my $file = <F>) {
+  chomp $file;
+  my $sh = $file;
+
+  $sh =~ s{$prefix/*}{}o;
+  next unless $sh =~ $pat;
+  next if $sh =~ m{^afd/};
+  next if $opt_y && $date->year_of($sh) != $opt_y;
+  next if $opt_m && $date->month_of($sh) != $opt_m;
+  $maxl = $maxl > length($sh) ? $maxl : length($sh);
+
+  unless (open F2, "<", $file) {
+    warn "Couldn't open file '$file': $!; skipping\n";
+    next;
+  }
+  my $wc = 0;
+  $wc += () = /\s+/g while <F2>;
+  $wc{TOTAL} += $wc{$sh} = qx{wc -w $file};
+}
+
+my $COUNT = my $N = keys(%wc) - 1;
+
+for my $file (sort {$wc{$a} <=> $wc{$b}}  keys %wc) {
+  my $label = $file eq "TOTAL" ? "TOTAL ($COUNT)" : $file;
+  printf "%3s %-${maxl}s %6d %5.1f%%\n", $N || "", $label, $wc{$file}, $wc{$file}*100/$wc{TOTAL};
+  $N--;
+}
+

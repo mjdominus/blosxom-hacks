@@ -1,0 +1,129 @@
+#
+
+package formula;
+
+my $formula = "/home/mjd/misc/blog/bin/formula";
+my $target = "/home/mjd/public_html/pictures/blog/tex";
+my $texlogfile = "/tmp/formula2-$<.err";
+
+sub start { 
+  open D, ">", "/tmp/formula-$<.err";
+  print D "$$ ", scalar(localtime), "\n";
+  unlink $texlogfile;
+  return 1;
+}
+
+my $SEQUENCE = "aa";
+sub formula {
+  my ($tex, $file, $lastmod) = @_;
+
+  # Add $$...$$$ unless something like it is there already
+  $tex = "\$\$$tex\$\$"  unless $tex =~ /(?<!\\)(?:\\\\)*\$/;
+
+  print D "-----\nFormula for file '$file':\n\t$tex\n\n";
+  print D ".blog file last mod " . localtime($lastmod) . "\n";
+  $file ||= "formula_" . $SEQUENCE++;
+  $file .= ".gif" unless $file =~ /\.gif$/;
+
+  return imglink($file, $tex) unless $blosxom::flavour eq "html";
+
+  my $texsave = "$target/$file.tex";
+  my $targmod = (stat $texsave)[9];
+  print D ".tex file ($texsave) last mod " . localtime($targmod) . "\n";
+  if (defined($targmod) && $lastmod <= $targmod) {
+    print D ".tex file more recent than .blog file; won't regenerate.\n";
+    return imglink($file, $tex)
+  }
+
+  my $old_tex = do {
+      my $RESULT;
+      if (open my($fh), "<", $texsave) {
+          local $/;
+          $RESULT = <$fh>;
+      }
+      $RESULT;
+  };
+
+  if (!defined($old_tex) || $old_tex ne $tex) {
+    my $cmd = "$formula -o $file -t $target";
+    print D "Regenerating image file\n";
+    my $start = time;
+    unless (open F, "|$cmd >> $texlogfile 2>&1") {
+      return "<b>Couldn't run <tt>$cmd</tt>: $!</b>";
+    }
+    print F $tex;
+    unless (close F) {
+      my $x = $? >> 8;
+      return "<b>Couldn't finish <tt>$cmd</tt>: $! (exit $x)</b>";
+    }
+
+    if (open F, ">", $texsave) {
+      print F $tex;
+      close F;
+    }
+    my $elapsed = time() - $start;
+    my $secs = $elapsed == 1 ? "sec" : "secs";
+    print D "Finished conversion in $elapsed $secs\n";
+  } else {
+    print D "TeX code hasn't changed since last time\n";
+  }
+
+
+  return imglink($file, $tex);
+}
+
+sub imglink {
+  my $file = shift;
+  $file .= ".gif" unless $file =~ /\.gif$/;
+
+  my $alt = shift || fetch_tex($file);
+
+  my %esc = ('"' => "quot" , '>' => "gt", '<' => "lt");
+
+  for ($alt) {
+    tr/ \t\n\r\f/ /s;
+#    s/^\s*\$+\s*//;
+#    s/\s*\$+\s*$//;
+    s/(["><])/$esc{$1}/g;
+  }
+  $alt = qq{alt="$alt"} if $alt;
+#  $alt = "";  # Until stupid RSS problem fixed
+
+        print D "testmode is $blosxom::testmode\n";
+
+  $blosxom::testmode ? 
+    qq{<img $alt border=0 src="http://plover.com:8080/~mjd/pictures/blog/tex/$file">}
+  :
+    qq{<img $alt border=0 src="http://pic.blog.plover.com/tex/$file">};
+}
+
+sub fetch_tex {
+  my $file = shift;
+  $file = "/home/mjd/public_html/pictures/blog/tex/$file.tex";
+  open my($f), "<", $file or return "";
+  join "", <$f>;
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+
+  my $file = join "/", $blosxom::datadir, $base;
+  my $lastmod = (stat $file)[9];
+  print D ".blog file ($file) last mod " . localtime($lastmod) . "\n";
+
+  $$body_ref =~ 
+    s{< \s* formula \s* (?: file \s* = \s*
+                            (?: "([^"]*)" | ([\w-]+) ) )? \s* >
+	(.*?)
+       < \s* /formula \s* >}
+     {formula($3, $1||$2, $lastmod)}egxs;
+
+  $$body_ref =~ 
+    s{< \s* formimg \s* file \s* = \s*
+                        (?: "([^"]*)" | ([\w-]+) ) \s* >}
+     {imglink($1||$2)}gexs;
+
+  return 1;
+}
+
+1;

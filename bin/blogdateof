@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+
+
+use lib '/home/mjd/misc/blog/plugins/lib';
+use Blosxom::MJD::Date;
+
+print scalar(localtime(Blosxom::MJD::Date->new->time_of(shift()))), "\n";
