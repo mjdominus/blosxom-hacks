@@ -1,0 +1,64 @@
+# -*- cperl -*-
+
+package meta;
+use DB_File;
+
+# metainformation examples:
+#  tags
+#  title
+#  not-yet flag
+
+my $metadb = "$blosxom::plugin_state_dir/META";
+#open my($f), ">>", "/tmp/meta.$<";
+
+sub start { 
+  tie my(%metadb) => 'DB_File' => $metadb, O_RDWR | O_CREAT
+    or die "Couldn't tie $metadb: $!";
+  return 1;
+}
+
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
+  my $BAD;
+
+  return unless $$title_ref =~ /\A\s*META\s*\z/;
+
+  my %meta;
+  {
+    my @body = split /\n/, $body_ref;
+    my @meta;
+    push @meta, shift @body while $body[0] =~ /\S/;
+    shift @body;
+    $$body_ref = join "\n", @body;
+    for (@meta) {
+      s/\s+\z//;
+      my ($k, $v) = split /:\s+/, $_, 2;
+      $meta{"$path/$filename"}{$k} = $v;
+      $metadb{"$path/$filename\cA$k"} = $v;
+    }
+  };
+
+  $$title_ref = $meta{"title"} or do {
+    warn "file $filename has no tite in its META section\n";
+    $BAD++;
+    "(no title in META section)";
+  };
+
+  return 1;
+}
+
+# Barnes and Noble old book links
+#
+# <IMG SRC="http://service.bfast.com/bfast/serve?bfmid=2181&sourceid=41259285&bfpid=$book{$1}{ISBN}&bfmtype=book" BORDER="0" WIDTH="1" HEIGHT="1" NOSAVE ><A HREF="http://service.bfast.com/bfast/click?bfmid=2181&sourceid=41259285&bfpid=$book{$1}{ISBN}&bfmtype=book">$book{$1}{IMGELT}</a><BR>
+# <A HREF="http://service.bfast.com/bfast/click?bfmid=2181&sourceid=41259285&bfpid=$book{$1}{ISBN}&bfmtype=book"><font size="-1">with kickback</font></a><br>
+# <A HREF="http://service.bfast.com/bfast/click?bfmid=2181&bfpid=$book{$1}{ISBN}&bfmtype=book"><font size="-1">no kickback</font></a>
+
+sub trim {
+  $_[0] =~ s/^\s+//;
+  $_[0] =~ s/\s+$//;
+  return $_[0];
+}
+
+1;
+
