@@ -17,9 +17,9 @@ sub start {
   return 1;
 }
 
-
 sub story {
-  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $fullpath)
+    = @_;
   my $BAD;
 
   return unless $$title_ref =~ /\A\s*META\s*\z/;
@@ -40,7 +40,7 @@ sub story {
   };
 
   $$title_ref = $meta{"title"} or do {
-    warn "file $filename has no tite in its META section\n";
+    warn "file $filename has no title in its META section\n";
     $BAD++;
     "(no title in META section)";
   };
@@ -48,11 +48,40 @@ sub story {
   return 1;
 }
 
-# Barnes and Noble old book links
-#
-# <IMG SRC="http://service.bfast.com/bfast/serve?bfmid=2181&sourceid=41259285&bfpid=$book{$1}{ISBN}&bfmtype=book" BORDER="0" WIDTH="1" HEIGHT="1" NOSAVE ><A HREF="http://service.bfast.com/bfast/click?bfmid=2181&sourceid=41259285&bfpid=$book{$1}{ISBN}&bfmtype=book">$book{$1}{IMGELT}</a><BR>
-# <A HREF="http://service.bfast.com/bfast/click?bfmid=2181&sourceid=41259285&bfpid=$book{$1}{ISBN}&bfmtype=book"><font size="-1">with kickback</font></a><br>
-# <A HREF="http://service.bfast.com/bfast/click?bfmid=2181&bfpid=$book{$1}{ISBN}&bfmtype=book"><font size="-1">no kickback</font></a>
+sub store_metadata {
+  my ($key, $md) = @_;
+  delete_metadata($key);
+  put_metadata_items($key, $md);
+  while (my ($k, $v) = each %$md) {
+    $metadb{meta_key($key, $k)} = $v;
+  }
+}
+
+sub delete_metadata {
+  my ($key) = @_;
+  my @items = get_metadata_items($key);
+  return unless @items;
+  for my $item (@items) {
+    delete $metadb{meta_key($key, $item)};
+  }
+}
+
+sub get_metadata_items {
+  my ($key) = @_;
+  my $v = $metadb{meta_key($key, "")};
+  split /,\s*/, $v;
+}
+
+sub put_metadata_items {
+  my ($key, $h) = @_;
+  $metadb{meta_key($key, "")} = join "," => sort keys %$h;
+}
+
+sub meta_key {
+  my ($key, $item) = @_;
+  return $key unless defined($item) && length($item) > 0;
+  return join "::", $key, $item;
+}
 
 sub trim {
   $_[0] =~ s/^\s+//;
