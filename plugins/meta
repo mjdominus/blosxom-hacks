@@ -9,7 +9,7 @@ use DB_File;
 #  not-yet flag
 
 my $metadb = "$blosxom::plugin_state_dir/META";
-#open my($f), ">>", "/tmp/meta.$<";
+open my($f), ">>", "/tmp/meta.$<";
 
 sub start { 
   tie my(%metadb) => 'DB_File' => $metadb, O_RDWR | O_CREAT
@@ -23,29 +23,31 @@ sub story {
   my $BAD;
 
   return unless $$title_ref =~ /\A\s*META\s*\z/;
+  print $f "Found meta section in <$path/$filename>\n";
 
   my %meta;
   {
-    my @body = split /\n/, $body_ref;
+    my @body = split /\n/, $$body_ref;
     my @meta;
-    push @meta, shift @body while $body[0] =~ /\S/;
+    push @meta, shift @body while @body && $body[0] =~ /\S/;
     shift @body;
     $$body_ref = join "\n", @body;
+    print $f "$path/$filename: found " . @meta . " meta-lines\n";
     for (@meta) {
+      print $f "  $_\n";
       s/\s+\z//;
       my ($k, $v) = split /:\s+/, $_, 2;
-      $meta{"$path/$filename"}{$k} = $v;
-      $metadb{"$path/$filename\cA$k"} = $v;
+      $meta{$k} = $v;
     }
   };
 
   $$title_ref = $meta{"title"} or do {
-    warn "file $filename has no title in its META section\n";
+    warn "file $path/$filename has no title in its META section\n";
     $BAD++;
     "(no title in META section)";
   };
 
-  return 1;
+  return $BAD ? 0 : 1;
 }
 
 sub store_metadata {
