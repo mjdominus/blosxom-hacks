@@ -12,8 +12,9 @@ my $metadb = "$blosxom::plugin_state_dir/META";
 open my($f), ">>", "/tmp/meta.$<";
 
 sub start { 
-  tie my(%metadb) => 'DB_File' => $metadb, O_RDWR | O_CREAT
-    or die "Couldn't tie $metadb: $!";
+  tie my(%metadb) => 'Tie::File::Hash' => $metadb,
+    { mode => O_RDWR | O_CREAT }
+      or die "Couldn't tie $metadb: $!";
   return 1;
 }
 
