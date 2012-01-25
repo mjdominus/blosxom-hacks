@@ -5,7 +5,7 @@ use Tie::File;
 
 sub new {
   my ($class, $file, $args) = @_;
-  my $sep = $args->{separator} || qr/: /;
+  my $sep = qr($args->{separator} || ": ");
   my $self = { sep => $sep };
   $self->{tf} = Tie::File->new($file, $args->{mode} || 0)
     or return;
@@ -31,7 +31,7 @@ sub found_key {
 sub kv {
   my ($self, $n) = @_;
   my $record = $self->record($n);
-  my ($key, $val) = split $self->{sep}, $record, 2;
+  my ($key, $val) = split /\Q$self->{sep}/, $record, 2;
   return ($key, $val);
 }
 
