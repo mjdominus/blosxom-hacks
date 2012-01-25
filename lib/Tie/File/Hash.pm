@@ -63,4 +63,22 @@ sub find_key {
   return;
 }
 
+sub STORE {
+  my ($self, $k, $v) = @_;
+
+  my $new_rec = join $self->{sep}, $k, $v;
+
+  if ($self->found_key($k) || $self->find_key($k)) {
+    $self->record($self->{keyrec}{$key}, $new_rec);
+  } else {
+    $self->{keyrec}{$key} = $self->append_rec($new_rec);
+  }
+}
+
+sub append_rec {
+  my ($self, $new_rec) = @_;
+  push @{$self->{tf}}, $new_rec;
+  return $#{$self->{tf}};
+}
+
 1;
