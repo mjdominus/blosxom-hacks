@@ -2,13 +2,16 @@
 
 package Tie::File::Hash;
 use Tie::File;
+use strict;
 
-sub new {
+sub TIEHASH {
   my ($class, $file, $args) = @_;
-  my $sep = qr($args->{separator} || ": ");
+  my $sep = $args->{separator} || ": ";
   my $self = { sep => $sep };
-  $self->{tf} = Tie::File->new($file, $args->{mode} || 0)
-    or return;
+  my @array;
+  tie @array, 'Tie::File', $file, mode => $args->{mode} || 0
+      or return;
+  $self->{tf} = \@array;
   $self->{keyrec} = {}; # maps keys to record numbers
   $self->{next_unknown} = 0; # next unexamined record
   $self->{all_known} = 0;    # no more unexamined records
@@ -31,6 +34,7 @@ sub found_key {
 sub kv {
   my ($self, $n) = @_;
   my $record = $self->record($n);
+  return unless defined $record;
   my ($key, $val) = split /\Q$self->{sep}/, $record, 2;
   return ($key, $val);
 }
@@ -54,8 +58,9 @@ sub find_key {
   my ($self, $key) = @_;
   return if $self->{all_known};
   while (1) {
-    my $next = $self->{next_unknown}++;
+    my $next = $self->{next_unknown};
     my ($k, $v) = $self->kv($next) or last;
+    $self->{next_unknown}++;
     $self->{keyrec}{$k} = $next;
     return 1 if $k eq $key;
   }
@@ -69,9 +74,9 @@ sub STORE {
   my $new_rec = join $self->{sep}, $k, $v;
 
   if ($self->found_key($k) || $self->find_key($k)) {
-    $self->record($self->{keyrec}{$key}, $new_rec);
+    $self->record($self->{keyrec}{$k}, $new_rec);
   } else {
-    $self->{keyrec}{$key} = $self->append_rec($new_rec);
+    $self->{keyrec}{$k} = $self->append_rec($new_rec);
   }
 }
 
