@@ -10,12 +10,14 @@ use Tie::File::Hash;
 #  not-yet flag
 
 my $metadb = "$blosxom::plugin_state_dir/META";
-open my($f), ">>", "/tmp/meta.$<";
+open my($f), ">", "/tmp/meta.$<";
+print $f "Starting at " . localtime() . "\n";
 
-sub start { 
+sub start {
   tie my(%metadb) => 'Tie::File::Hash' => $metadb,
     { mode => O_RDWR | O_CREAT }
       or die "Couldn't tie $metadb: $!";
+  print $f "meta plugin tied $metadb\n";
   return 1;
 }
 
@@ -24,6 +26,7 @@ sub story {
     = @_;
   my $BAD;
 
+  print $f "meta plugin processing <$path/$filename>\n";
   return unless $$title_ref =~ /\A\s*META\s*\z/;
   print $f "Found meta section in <$path/$filename>\n";
 
@@ -49,16 +52,22 @@ sub story {
     "(no title in META section)";
   };
 
+  store_metadata("$path/$filename", \%meta);
+
   return $BAD ? 0 : 1;
 }
 
 sub store_metadata {
   my ($key, $md) = @_;
+  print $f "  Storing metadata for $key\n";
   delete_metadata($key);
+  print $f "  Putting meta-metadata for $key\n";
   put_metadata_items($key, $md);
+  print $f "  Putting metadata for $key\n";
   while (my ($k, $v) = each %$md) {
     $metadb{meta_key($key, $k)} = $v;
   }
+  print $f "  Done storing metadata for $key\n";
 }
 
 sub delete_metadata {
@@ -91,6 +100,10 @@ sub trim {
   $_[0] =~ s/^\s+//;
   $_[0] =~ s/\s+$//;
   return $_[0];
+}
+
+END {
+  print $f "Exiting at " . localtime() . "\n";
 }
 
 1;
