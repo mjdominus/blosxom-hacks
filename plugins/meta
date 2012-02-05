@@ -1,7 +1,8 @@
 # -*- cperl -*-
 
 package meta;
-use DB_File;
+use lib '/home/mjd/src/perl-Tie-File/lib';
+use Tie::File::Hash;
 
 # metainformation examples:
 #  tags
