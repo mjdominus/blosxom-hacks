@@ -27,7 +27,10 @@ sub start {
 
 sub get {
   my ($path, $key) = @_;
-  return $metadb{meta_key($path, $key)};
+  print $f "call: get($path, $key)\n";
+  my $z = $metadb{meta_key($path, $key)};
+  print $f "  ret: $z\n";
+  return $z;
 }
 
 sub story {
