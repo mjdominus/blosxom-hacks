@@ -3,6 +3,8 @@
 package meta;
 use lib '/home/mjd/misc/blog/src/lib';
 use Tie::File::Hash;
+use strict;
+use Fcntl qw(O_RDWR O_CREAT);
 
 # metainformation examples:
 #  tags
@@ -12,11 +14,13 @@ use Tie::File::Hash;
 my $metadb = "$blosxom::plugin_state_dir/META";
 open my($f), ">", "/tmp/meta.$<";
 print $f "Starting at " . localtime() . "\n";
+our %metadb;
 
 sub start {
-  tie my(%metadb) => 'Tie::File::Hash' => $metadb,
+  tie %metadb => 'Tie::File::Hash' => $metadb,
     { mode => O_RDWR | O_CREAT }
       or die "Couldn't tie $metadb: $!";
+  *blosxom::META = \%metadb;
   print $f "meta plugin tied $metadb\n";
   return 1;
 }
