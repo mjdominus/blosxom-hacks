@@ -19,12 +19,13 @@ sub filter {
     (my $file = $k) =~ s/^$blosxom::datadir//o;
     $file =~ s/\.\w+$//;
     print F "$file $k $f->{$k}\n";
+    my $flag = -e $notyet || meta::get($f, "notyet");
     if ($f->{$k} > $now + 86400 * 14) {
       # completely suppress articles more than two weeks in the future,
       # even in test mode
       print F "  way too new\n";
       delete $f->{$k};  
-    }  elsif (-e $notyet || $f->{$k} > $now) {
+    }  elsif (-e $flag || $f->{$k} > $now) {
       print F "  notyet file\n" if -e $notyet;
       print F "  too fresh\n" if ! -e $notyet;
       $omit{$file} = 1;
