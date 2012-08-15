@@ -1,7 +1,7 @@
 # -*- cperl -*-
 
 package meta;
-use lib '/home/mjd/src/perl-Tie-File/lib';
+use lib '/home/mjd/misc/blog/src/lib';
 use Tie::File::Hash;
 
 # metainformation examples:
@@ -46,7 +46,7 @@ sub story {
     }
   };
 
-  $$title_ref = $meta{"title"} or do {
+  $$title_ref = $meta{"title"} || do {
     warn "file $path/$filename has no title in its META section\n";
     $BAD++;
     "(no title in META section)";
