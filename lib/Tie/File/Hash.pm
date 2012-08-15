@@ -26,6 +26,17 @@ sub FETCH {
   return $self->value($self->{keyrec}{$key});
 }
 
+sub DELETE {
+  my ($self, $key) = @_;
+  unless ($self->found_key($key)) {
+    $self->find_key($key) or return;
+  }
+  my $recno = $self->{keyrec}{$key};
+  my $old = $self->value($recno);
+  $self->{tf}[$recno] = ""; # TODO: Close this up later
+  delete $self->{keyrec}{$key};
+}
+
 sub found_key {
   my ($self, $key) = @_;
   defined $self->{keyrec}{$key};
