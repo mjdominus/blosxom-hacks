@@ -25,6 +25,11 @@ sub start {
   return 1;
 }
 
+sub get {
+  my ($path, $key) = @_;
+  return $metadb{meta_key($path, $key)};
+}
+
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $fullpath)
     = @_;
