@@ -21,7 +21,7 @@ sub filter {
     print F "$file $k $f->{$k}\n";
     my $fileflag = 0+ -e $notyet;
     my $published = 0+ meta::get($file, "published");
-    print F "  fileflag: $fileflag; metaflag: $metaflag\n";
+    print F "  fileflag: $fileflag; metaflag: $published\n";
     my $flag = $fileflag || ! $published;
     if ($f->{$k} > $now + 86400 * 14) {
       # completely suppress articles more than two weeks in the future,
