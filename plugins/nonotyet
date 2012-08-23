@@ -16,15 +16,19 @@ sub filter {
   my ($pkg, $f) = @_;
   for my $k (keys %$f) {
     (my $notyet = $k) =~ s/\.blog$/\.notyet/;
-    (my $file = $k) =~ s/^$blosxom::datadir//o;
+    (my $file = $k) =~ s{^$blosxom::datadir}{}o;
     $file =~ s/\.\w+$//;
     print F "$file $k $f->{$k}\n";
+    my $fileflag = 0+ -e $notyet;
+    my $published = 0+ meta::get($file, "published");
+    print F "  fileflag: $fileflag; metaflag: $published\n";
+    my $flag = $fileflag || ! $published;
     if ($f->{$k} > $now + 86400 * 14) {
       # completely suppress articles more than two weeks in the future,
       # even in test mode
       print F "  way too new\n";
       delete $f->{$k};  
-    }  elsif (-e $notyet || $f->{$k} > $now) {
+    }  elsif ($flag || $f->{$k} > $now) {
       print F "  notyet file\n" if -e $notyet;
       print F "  too fresh\n" if ! -e $notyet;
       $omit{$file} = 1;

@@ -1,0 +1,122 @@
+# -*- cperl -*-
+
+package meta;
+use lib '/home/mjd/misc/blog/src/lib';
+use Tie::File::Hash;
+use strict;
+use Fcntl qw(O_RDWR O_CREAT);
+
+# metainformation examples:
+#  tags
+#  title
+#  not-yet flag
+
+my $metadb = "$blosxom::plugin_state_dir/META";
+open my($f), ">", "/tmp/meta.$<";
+print $f "Starting at " . localtime() . "\n";
+our %metadb;
+
+sub start {
+  tie %metadb => 'Tie::File::Hash' => $metadb,
+    { mode => O_RDWR | O_CREAT }
+      or die "Couldn't tie $metadb: $!";
+  *blosxom::META = \%metadb;
+  print $f "meta plugin tied $metadb\n";
+  return 1;
+}
+
+sub get {
+  my ($path, $key) = @_;
+  print $f "call: get($path, $key)\n";
+  my $z = $metadb{meta_key($path, $key)};
+  print $f "  ret: $z\n";
+  return $z;
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $fullpath)
+    = @_;
+  my $BAD;
+
+  print $f "meta plugin processing <$path/$filename>\n";
+  return unless $$title_ref =~ /\A\s*META\s*\z/;
+  print $f "Found meta section in <$path/$filename>\n";
+
+  my %meta;
+  {
+    my @body = split /\n/, $$body_ref;
+    my @meta;
+    push @meta, shift @body while @body && $body[0] =~ /\S/;
+    shift @body;
+    $$body_ref = join "\n", @body;
+    print $f "$path/$filename: found " . @meta . " meta-lines\n";
+    for (@meta) {
+      print $f "  $_\n";
+      s/\s+\z//;
+      my ($k, $v) = split /:\s+/, $_, 2;
+      $meta{$k} = $v;
+    }
+  };
+
+  $$title_ref = $meta{"title"} || do {
+    warn "file $path/$filename has no title in its META section\n";
+    $BAD++;
+    "(no title in META section)";
+  };
+
+  store_metadata("$path/$filename", \%meta);
+
+  return $BAD ? 0 : 1;
+}
+
+sub store_metadata {
+  my ($key, $md) = @_;
+  print $f "  Storing metadata for $key\n";
+  delete_metadata($key);
+  print $f "  Putting meta-metadata for $key\n";
+  put_metadata_items($key, $md);
+  print $f "  Putting metadata for $key\n";
+  while (my ($k, $v) = each %$md) {
+    $metadb{meta_key($key, $k)} = $v;
+  }
+  print $f "  Done storing metadata for $key\n";
+}
+
+sub delete_metadata {
+  my ($key) = @_;
+  my @items = get_metadata_items($key);
+  return unless @items;
+  for my $item (@items) {
+    delete $metadb{meta_key($key, $item)};
+  }
+}
+
+sub get_metadata_items {
+  my ($key) = @_;
+  my $v = $metadb{meta_key($key, "")};
+  split /,\s*/, $v;
+}
+
+sub put_metadata_items {
+  my ($key, $h) = @_;
+  $metadb{meta_key($key, "")} = join "," => sort keys %$h;
+}
+
+sub meta_key {
+  my ($key, $item) = @_;
+  return $key unless defined($item) && length($item) > 0;
+  return join "::", $key, $item;
+}
+
+sub trim {
+  $_[0] =~ s/^\s+//;
+  $_[0] =~ s/\s+$//;
+  return $_[0];
+}
+
+END {
+  print $f "Exiting at " . localtime() . "\n";
+}
+
+1;
+
