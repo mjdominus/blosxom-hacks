@@ -13,11 +13,57 @@ sub start {
   return 1;
 }
 
+sub strip_dollars {
+  my ($tex) = @_;
+
+  return $tex =~ m{\A \s* (\S{1,2}) (.*) \1 \s* \z}x ? $2 : $tex;
+}
+
 my $SEQUENCE = "aa";
 sub formula {
+  my %args = @_;
+  my ($tex, $file, $lastmod, $formula_provider) =
+    @args{qw(tex file lastmod provider)};
+
+  if ($formula_provider eq "local-tex") {
+    return local_tex($tex, $file, $lastmod);
+
+  } elsif ($formula_provider eq "mathjax") {
+    if ($tex !~ /(?<!\\)(?:\\\\)*\$/) {
+      $tex = "\$\$$tex\$\$"; # Add $$...$$ if there are no dollar signs at all
+      # Mathjax will take it from there
+    } elsif ($tex =~ /\A\s*(\${1,2})(.*)\1\s*\z/) { # already delimited by $'s
+      if ($1 eq '$') { $tex = "!!$2!!" }
+      elsif ($1 eq '$$') {
+        # Mathhjax will handle it
+      } else {
+        die "CAN'T HAPPEN";
+      }
+    } else {
+      $tex = "!!$tex!!";
+    }
+    return $tex;
+
+  } elsif ($formula_provider eq "72pines") {
+    # http://tex.72pines.com/latex.php?latex=x%2by^2
+    die "UNIMPLEMENTED";
+  } elsif ($formula_provider eq "google-charts") {
+    # https://google-developers.appspot.com/chart/infographics/docs/formulas
+    # Deprecated as of 20120420
+    $tex = strip_dollars($tex);
+    $tex =~ s/(\W)/sprintf("%%%02x", ord($1))/eg;
+    return qq{<img src="https://chart.googleapis.com/chart?chf=bg,s,00000000&cht=tx&chl=$tex">};
+  } elsif ($formula_provider eq "mathtran") {
+    # http://www.mathtran.org/
+  } else {
+    die "Unknown formula rendering provider '$formula_provider'";
+  }
+}
+
+sub local_tex {
   my ($tex, $file, $lastmod) = @_;
 
-  # Add $$...$$$ unless something like it is there already
+  # Add $$...$$ unless something like it is there already
   $tex = "\$\$$tex\$\$"  unless $tex =~ /(?<!\\)(?:\\\\)*\$/;
 
   print D "-----\nFormula for file '$file':\n\t$tex\n\n";
@@ -25,14 +71,14 @@ sub formula {
   $file ||= "formula_" . $SEQUENCE++;
   $file .= ".gif" unless $file =~ /\.gif$/;
 
-  return imglink($file, $tex) unless $blosxom::flavour eq "html";
+  return imglink(file => $file, tex => $tex) unless $blosxom::flavour eq "html";
 
   my $texsave = "$target/$file.tex";
   my $targmod = (stat $texsave)[9];
   print D ".tex file ($texsave) last mod " . localtime($targmod) . "\n";
   if (defined($targmod) && $lastmod <= $targmod) {
     print D ".tex file more recent than .blog file; won't regenerate.\n";
-    return imglink($file, $tex)
+    return imglink(file => $file, tex => $tex)
   }
 
   my $old_tex = do {
@@ -69,14 +115,15 @@ sub formula {
   }
 
 
-  return imglink($file, $tex);
+  return imglink(file => $file, tex => $tex);
 }
 
 sub imglink {
-  my $file = shift;
+  my %args = @_;
+  my $file = $args{file};
   $file .= ".gif" unless $file =~ /\.gif$/;
 
-  my $alt = shift || fetch_tex($file);
+  my $alt = $args{tex} || fetch_tex($file);
 
   my %esc = ('"' => "quot" , '>' => "gt", '<' => "lt");
 
@@ -107,21 +154,32 @@ sub fetch_tex {
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
 
+  print D "story args: @_\n";
+
   my $file = join "/", $blosxom::datadir, $base;
   my $lastmod = (stat $file)[9];
   print D ".blog file ($file) last mod " . localtime($lastmod) . "\n";
+
+  my $formula_provider =
+    meta::get("$path/$filename", "formulas.$blosxom::flavour") ||
+    meta::get("$path/$filename", "formulas")                   ||
+    ($blosxom::flavour eq "html" ? "mathjax" : "google-charts");
+
+  # DEBUG
+  $$body_ref = qq{<font size="+1" color="red">formula provider: $formula_provider</font><p>\n\n $$body_ref};
 
   $$body_ref =~ 
     s{< \s* formula \s* (?: file \s* = \s*
                             (?: "([^"]*)" | ([\w-]+) ) )? \s* >
 	(.*?)
        < \s* /formula \s* >}
-     {formula($3, $1||$2, $lastmod)}egxs;
+     {formula(tex => $3, file => $1||$2, lastmod => $lastmod,
+              provider => $formula_provider)}egxs;
 
   $$body_ref =~ 
     s{< \s* formimg \s* file \s* = \s*
                         (?: "([^"]*)" | ([\w-]+) ) \s* >}
-     {imglink($1||$2)}gexs;
+     {imglink(file => $1||$2, provider => $formula_provider)}gexs;
 
   return 1;
 }
