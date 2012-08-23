@@ -1,6 +1,6 @@
 #
 
-package aa_macro;
+package macro;
 
 #open my($f), ">>", "/dev/pts/13";
 open my($f), ">>", "/tmp/macro-$<";
