@@ -6,7 +6,7 @@ my %omit;
 sub start { 
     $blosxom::testmode = $ENV{SCRIPT_NAME} =~ /testblog/;
 #    $blosxom::show_future_entries = $blosxom::testmode;
-    open F, ">", "/tmp/nonotyet";
+    open F, ">", "/tmp/nonotyet.$<";
     print F scalar(localtime), " $$ testmode: $blosxom::testmode\n";
     return 1;
 }
