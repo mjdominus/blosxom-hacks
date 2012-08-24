@@ -19,18 +19,22 @@ sub filter {
     (my $file = $k) =~ s{^$blosxom::datadir}{}o;
     $file =~ s/\.\w+$//;
     print F "$file $k $f->{$k}\n";
-    my $fileflag = 0+ -e $notyet;
-    my $published = 0+ meta::get($file, "published");
-    print F "  fileflag: $fileflag; metaflag: $published\n";
-    my $flag = $fileflag || ! $published;
+    my $meta_published = meta::get($file, "published");
+    my $has_meta = meta::has($file);
+    my $has_notyet = -e $notyet;
+    my $publish = 0 + (! $has_notyet && ($has_meta ? $meta_published : 1));
+
+    print F "  has_meta: $has_meta meta_published: $meta_published\n";
+    print F "  has_notyet: $has_notyet ($notyet)\n";
+    print F "  date database: $f->{$k}\n";
+    print F "  WILL PUBLISH: $publish\n";
+
     if ($f->{$k} > $now + 86400 * 14) {
       # completely suppress articles more than two weeks in the future,
       # even in test mode
-      print F "  way too new\n";
-      delete $f->{$k};  
-    }  elsif ($flag || $f->{$k} > $now) {
-      print F "  notyet file\n" if -e $notyet;
-      print F "  too fresh\n" if ! -e $notyet;
+      print F "  way too new ($f->{$k})\n";
+      delete $f->{$k};
+    }  elsif (! $publish || $f->{$k} > $now) {
       $omit{$file} = 1;
       unless ($blosxom::testmode) {
         print F "  and not in test mode\n";
