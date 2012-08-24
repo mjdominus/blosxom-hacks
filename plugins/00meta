@@ -4,7 +4,7 @@ package meta;
 use lib '/home/mjd/misc/blog/src/lib';
 use Tie::File::Hash;
 use strict;
-use Fcntl qw(O_RDWR O_CREAT);
+use Fcntl qw(O_RDWR O_CREAT LOCK_EX);
 
 # metainformation examples:
 #  tags
@@ -17,8 +17,11 @@ print $f "Starting at " . localtime() . "\n";
 our %metadb;
 
 sub start {
-  tie %metadb => 'Tie::File::Hash' => $metadb,
-    { mode => O_RDWR | O_CREAT }
+  tie %metadb => 'Tie::File::Hash' => $metadb, 
+    {
+     mode => O_RDWR | O_CREAT,
+     flock => LOCK_EX,
+    }
       or die "Couldn't tie $metadb: $!";
   *blosxom::META = \%metadb;
   print $f "meta plugin tied $metadb\n";

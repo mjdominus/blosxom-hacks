@@ -9,8 +9,9 @@ sub TIEHASH {
   my $sep = $args->{separator} || ": ";
   my $self = { sep => $sep };
   my @array;
-  tie @array, 'Tie::File', $file, mode => $args->{mode} || 0
-      or return;
+  my $o = tie @array, 'Tie::File', $file, mode => $args->{mode} || 0
+    or return;
+  $o->flock($args->{flock}) if exists $args->{flock};
   $self->{tf} = \@array;
   $self->{keyrec} = {}; # maps keys to record numbers
   $self->{next_unknown} = 0; # next unexamined record
