@@ -25,21 +25,27 @@ sub formula {
   my ($tex, $file, $lastmod, $formula_provider) =
     @args{qw(tex file lastmod provider)};
 
+  print D "Converting formula <<$tex>>\n";
+  print D " Using provider '$formula_provider'\n";
   if ($formula_provider eq "local-tex") {
     return local_tex($tex, $file, $lastmod);
 
   } elsif ($formula_provider eq "mathjax") {
     if ($tex !~ /(?<!\\)(?:\\\\)*\$/) {
       $tex = "\$\$$tex\$\$"; # Add $$...$$ if there are no dollar signs at all
+      print D "Added \$\$...\$\$\n";
       # Mathjax will take it from there
-    } elsif ($tex =~ /\A\s*(\${1,2})(.*)\1\s*\z/) { # already delimited by $'s
-      if ($1 eq '$') { $tex = "!!$2!!" }
-      elsif ($1 eq '$$') {
-        # Mathhjax will handle it
+    } elsif ($tex =~ /\A\s*(\${1,2})(.*)\1\s*\z/s) { # already delimited by $'s
+      if ($1 eq '$') {
+        print D "Already has \$...\$; converting to !!...!!\n";
+        $tex = "!!$2!!"
+      } elsif ($1 eq '$$') {
+        print D "Already has \$\$...\$\$; doing nothing\n";
       } else {
         die "CAN'T HAPPEN";
       }
     } else {
+      print D "Has no delimiters; adding !!...!!!\n";
       $tex = "!!$tex!!";
     }
     return $tex;
@@ -166,7 +172,7 @@ sub story {
     ($blosxom::flavour eq "html" ? "mathjax" : "google-charts");
 
   # DEBUG
-  $$body_ref = qq{<font size="+1" color="red">formula provider: $formula_provider</font><p>\n\n $$body_ref}
+  $$body_ref = qq{<font size="+1" color="darkblue">formula provider: $formula_provider</font><p>\n\n $$body_ref}
         if $blosxom::testmode;
 
   if ($formula_provider ne 'mathjax') {
