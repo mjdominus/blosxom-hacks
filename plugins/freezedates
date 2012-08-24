@@ -13,10 +13,6 @@ sub filter {
   my $d = load_dates($datefile);
   my $write;
 
-  if (open F, "> /tmp/BLAH") {
-    print F join "-", %$d;
-  }
-
   # Items in %d override the values supplied by Blosxom in %f
   # But if there's a new file, it is in %f and not %d, so we
   # copy it from %f to %d and set the $write flag to indicate that 
@@ -62,7 +58,16 @@ sub load_dates {
 }
 
 sub save_dates {
+  require POSIX;
   my ($df, $tmp, $dates) = @_;
+  my $today = POSIX::strftime("%Y%m%d", localtime());
+  my $backup_file = "$blosxom::plugin_state_dir/date_bkp/$today.dates";
+
+  unless (-e $backup_file) {
+    require File::Copy;
+    File::Copy::copy($df, $backup_file);
+  }
+
   open my($F), ">", $tmp or die "Couldn't write $tmp: $!; aborting";
   chmod 0777, $tmp;
   for my $k (sort {lc($a) cmp lc($b) } keys %$dates) {
