@@ -169,6 +169,12 @@ sub story {
   $$body_ref = qq{<font size="+1" color="red">formula provider: $formula_provider</font><p>\n\n $$body_ref}
         if $blosxom::testmode;
 
+  if ($formula_provider ne 'mathjax') {
+    $$body_ref =~ 
+      s{!!(.*?)!!}
+       {formula(tex => "\$$1\$", provider => $formula_provider)}egxs;
+  }
+
   $$body_ref =~ 
     s{< \s* formula \s* (?: file \s* = \s*
                             (?: "([^"]*)" | ([\w-]+) ) )? \s* >
