@@ -149,10 +149,10 @@ sub head {
   $copyright and $copyright = "<rights>$copyright</rights>";
 
   $author_uri or $author_uri = "$blosxom::url";
-  $author_uri = "<uri>$author_uri</uri>";
+  $author_uri = "<uri>$author_uri</uri>" unless $author_uri =~ /<uri>/;
 
-  $author_email and $author_email = "\n      <email>$author_email</email>";
-  $icon_url and $icon_url = "<icon>$icon_url</icon>";
+  $author_email and $author_email !~ /<email>/ and $author_email = "\n      <email>$author_email</email>";
+  $icon_url and $icon_url !~ /<icon>/ and $icon_url = "<icon>$icon_url</icon>";
   $logo_url and $logo_url = "<logo>$logo_url</logo>";
 
   # Check and prepare a <title> and <subtitle>:
