@@ -56,7 +56,8 @@ sub formula {
   } elsif ($formula_provider eq "google-charts") {
     # https://google-developers.appspot.com/chart/infographics/docs/formulas
     # Deprecated as of 20120420
-    $tex = strip_dollars($tex);
+    #    $tex = strip_dollars($tex);
+    # Google handles $...$ and $$...$$ reasonably
     $tex =~ s/(\W)/sprintf("%%%02x", ord($1))/eg;
     return qq{<img src="https://chart.googleapis.com/chart?chf=bg,s,00000000&cht=tx&chl=$tex">};
   } elsif ($formula_provider eq "mathtran") {
