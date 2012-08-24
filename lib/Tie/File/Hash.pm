@@ -3,6 +3,7 @@
 package Tie::File::Hash;
 use Tie::File;
 use strict;
+our $VERSION = "20120825";
 
 sub TIEHASH {
   my ($class, $file, $args) = @_;
