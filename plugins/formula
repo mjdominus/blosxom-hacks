@@ -176,7 +176,7 @@ sub story {
     ($blosxom::flavour eq "html" ? "mathjax" : "google-charts");
 
   # DEBUG
-  $$body_ref = qq{<font size="+1" color="darkblue">formula provider: $formula_provider</font><p>\n\n $$body_ref}
+  $$body_ref = qq{<font  color="darkblue">formula provider: $formula_provider</font><p>\n\n $$body_ref}
         if $blosxom::testmode;
 
   if ($formula_provider ne 'mathjax') {
