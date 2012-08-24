@@ -28,6 +28,11 @@ sub start {
   return 1;
 }
 
+sub end {
+  print $f "Untying\n";
+  untie %metadb;
+}
+
 sub get {
   my ($path, $key) = @_;
   print $f "call: get($path, $key)\n";

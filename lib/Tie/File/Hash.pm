@@ -19,6 +19,21 @@ sub TIEHASH {
   bless $self => $class;
 }
 
+sub UNTIE {
+  my ($self) = @_;
+  my $a = $self->{tf};
+  my $o = tied @$a;
+  $o->defer;
+  for my $i (reverse 0 .. $#$a) {
+    if ($a->[$i] eq "") {
+      splice @$a, $i, 1;
+    }
+  }
+  $o->flush;
+  undef $o;
+  undef $a;
+}
+
 sub FETCH {
   my ($self, $key) = @_;
   unless ($self->found_key($key)) {
@@ -34,7 +49,7 @@ sub DELETE {
   }
   my $recno = $self->{keyrec}{$key};
   my $old = $self->value($recno);
-  $self->{tf}[$recno] = ""; # TODO: Close this up later
+  $self->{tf}[$recno] = "";
   delete $self->{keyrec}{$key};
 }
 

@@ -5,7 +5,7 @@ use Test::Deep;
 use Tie::File::Hash;
 use Fcntl;
 
-plan tests => 14;
+plan tests => 15;
 my $file = "/tmp/tiefile$$";
 
 {
@@ -41,6 +41,17 @@ untie %f;
     is ($f{1}, 2);
     is ($f{11}, "eleven");
     is ($f{2}, "foo2");
+
+    note "do gaps get closed up after delete?";
+    delete $f{11};
+    delete $f{2};
+    $f{2} = "newfoo2";
+    untie %f;
+
+    open my($fh), "<", $file or die $!;
+    my $BLANK_LINES = 0;
+    while (<$fh>) { $BLANK_LINES++ if $_ =~ /^$/ }
+    is($BLANK_LINES, 0, "this many blank lines not closed up after untie");
 }
 
 END { unlink $file }
