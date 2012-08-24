@@ -33,6 +33,11 @@ sub get {
   return $z;
 }
 
+sub has {
+  my ($path) = @_;
+  return get($path, 'HAS');
+}
+
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $fullpath)
     = @_;
@@ -42,7 +47,7 @@ sub story {
   return unless $$title_ref =~ /\A\s*META\s*\z/;
   print $f "Found meta section in <$path/$filename>\n";
 
-  my %meta;
+  my %meta = (HAS => 1);
   {
     my @body = split /\n/, $$body_ref;
     my @meta;
