@@ -398,12 +398,17 @@ sub generate {
         $fh->close;
         $raw = "$title\n$body";
       }
-      $single_title = defined($single_title) ? "" : $title;
       my $story = (&$template($path,'story',$flavour));
   
       # Plugins: Story
       foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('story') and $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath) }
-      
+
+      # If an archive page has only one article, it is stored in
+      # $single_title, which is later inserted into $page_title, which
+      # appears in the <title> element.  Otherwise $single_title is
+      # false. 20120826 mjd@plover.com
+      $single_title = defined($single_title) ? "" : $title;
+
       if ($content_type =~ m{\Wxml$}) {
         # Escape <, >, and &, and to produce valid RSS
         my %escape = ('<'=>'&lt;', '>'=>'&gt;', '&'=>'&amp;', '"'=>'&quot;');  
