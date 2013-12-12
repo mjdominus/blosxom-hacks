@@ -68,7 +68,7 @@ sub story {
       print $f "  $_\n";
       s/\s+\z//;
       my ($k, $v) = split /:\s+/, $_, 2;
-      $meta{$k} = $v;
+      $meta{lc $k} = $v;
     }
   };
 
