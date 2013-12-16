@@ -79,6 +79,10 @@ sub story {
   };
 
   store_metadata("$path/$filename", \%meta);
+  my %tied;
+  my $obj = tie %tied, 'Metadata', "$path/$filename";
+  $blosxom::metadata_hash{"$path/$filename"} = \%tied;
+  $blosxom::metadata_obj{"$path/$filename"} = $obj;
 
   return $BAD ? 0 : 1;
 }
@@ -130,6 +134,39 @@ sub trim {
 
 END {
   print $f "Exiting at " . localtime() . "\n";
+}
+
+package Metadata;
+use Carp qw(confess croak);
+
+sub TIEHASH {
+  my ($class, $article) = @_;
+  bless { article => $article } => $class;
+}
+
+sub FETCH {
+  my ($self, $k) = @_;
+  meta::get($self->{article}, $k);
+}
+
+sub EXISTS {
+  my ($self, $k) = @_;
+  meta::has($self->{article}, $k);
+}
+
+sub STORE {
+  croak "STORE unimplemented";
+}
+
+sub FIRSTKEY {
+  my ($self) = @_;
+  $self->{keys} = [ meta::get_metadata_items($self->{article}) ];
+  return shift @{$self->{keys}};
+}
+
+sub NEXTKEY {
+  my ($self) = @_;
+  return shift @{$self->{keys}};
 }
 
 1;
