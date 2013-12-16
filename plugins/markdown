@@ -1,0 +1,34 @@
+
+package markdown;
+
+sub start {
+  open F, ">", "/tmp/markdown.$<" or return 1;
+  my $ofh = select F;
+  $|=1;
+  select $ofh;
+  print F "$$ ", scalar(localtime), "\n";
+  print F join "\n", @INC, "";
+  return 1;
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $dir, $date, $meta) = @_;
+  print F "--- STORY @_\n";
+  print F "  Flavour: $blosxom::flavour\n";
+  unless (exists $meta->{formatter} && lc($meta->{formatter}) eq "markdown") {
+    print F "    Does not specify markdown formatter; quitting.\n";
+    return 1;
+  }
+
+  require Text::Markdown;
+  if ($blosxom::flavour eq "html") {
+    $$body_ref = Text::Markdown::markdown($$body_ref);
+  } else {
+    print F "Don't know how to handle markdown for flavour $blosxom::flavour; skipping.\n";
+  }
+
+  return 1;
+}
+
+1;
+
