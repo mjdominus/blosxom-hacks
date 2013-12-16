@@ -6,10 +6,10 @@ use HTML::TreeBuilder;
 #my $blogimg = "http://www.plover.com/~mjd/pictures/blog";
 my $blogimg;
 
-sub start { 
+sub start {
   open F, ">", "/tmp/path.err";
   $blogimg = $blosxom::testmode
-        ? "http://plover.com:8080/~mjd/pictures/blog" 
+        ? "http://plover.com/~mjd/pictures/blog"
         : "http://pic.blog.plover.com";
   return 1;
 }
@@ -57,7 +57,7 @@ sub story {
     my ($from, $to) = @$change;
     print F "Replacing [[$from]] with [[$to]]\n";
     my $pos = index($$body_ref, $from);
-    if ($pos < 0) { 
+    if ($pos < 0) {
       print F "!!! Couldn't find target!\n";
       next;
     }

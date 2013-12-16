@@ -6,7 +6,7 @@ my $formula = "/home/mjd/misc/blog/bin/formula";
 my $target = "/home/mjd/public_html/pictures/blog/tex";
 my $texlogfile = "/tmp/formula2-$<.err";
 
-sub start { 
+sub start {
   open D, ">", "/tmp/formula-$<.err";
   print D "$$ ", scalar(localtime), "\n";
   unlink $texlogfile;
@@ -148,8 +148,8 @@ sub imglink {
 
         print D "testmode is $blosxom::testmode\n";
 
-  $blosxom::testmode ? 
-    qq{<img $alt border=0 src="http://plover.com:8080/~mjd/pictures/blog/tex/$file">}
+  $blosxom::testmode ?
+    qq{<img $alt border=0 src="http://plover.com/~mjd/pictures/blog/tex/$file">}
   :
     qq{<img $alt border=0 src="http://pic.blog.plover.com/tex/$file">};
 }
@@ -180,12 +180,12 @@ sub story {
         if $blosxom::testmode;
 
   if ($formula_provider ne 'mathjax') {
-    $$body_ref =~ 
+    $$body_ref =~
       s{!!(.*?)!!}
        {formula(tex => "\$$1\$", provider => $formula_provider)}egxs;
   }
 
-  $$body_ref =~ 
+  $$body_ref =~
     s{< \s* formula \s* (?: file \s* = \s*
                             (?: "([^"]*)" | ([\w-]+) ) )? \s* >
 	(.*?)
@@ -193,7 +193,7 @@ sub story {
      {formula(tex => $3, file => $1||$2, lastmod => $lastmod,
               provider => $formula_provider)}egxs;
 
-  $$body_ref =~ 
+  $$body_ref =~
     s{< \s* formimg \s* file \s* = \s*
                         (?: "([^"]*)" | ([\w-]+) ) \s* >}
      {imglink(file => $1||$2, provider => $formula_provider)}gexs;
