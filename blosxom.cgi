@@ -296,7 +296,7 @@ else {
 foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('end') and $entries = $plugin->end() }
 
 BEGIN {
-  open F, ">", "/tmp/blosxom-generate";
+  open F, ">", "/tmp/blosxom-generate.$<";
 }
 
 # Generate 
