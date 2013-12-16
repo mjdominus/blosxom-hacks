@@ -15,7 +15,7 @@ sub filter {
 
   # Items in %d override the values supplied by Blosxom in %f
   # But if there's a new file, it is in %f and not %d, so we
-  # copy it from %f to %d and set the $write flag to indicate that 
+  # copy it from %f to %d and set the $write flag to indicate that
   # the modified $d should be saved
   for my $k (keys %$f) {
     if (exists $d->{$k}) {
@@ -76,3 +76,5 @@ sub save_dates {
   close $F or die "Write error: $!; aborting";
   rename $tmp, $df or die "rename $tmp => $df: $!; aborting";
 }
+
+1;
