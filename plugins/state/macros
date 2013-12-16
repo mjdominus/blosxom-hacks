@@ -1,0 +1,6 @@
+#define `` &ldquo;
+#define '' &rdquo;
+#define ^2 <sup>2</sup>
+#define --- &mdash;
+#define ... &hellip;
+

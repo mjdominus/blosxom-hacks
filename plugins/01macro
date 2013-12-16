@@ -3,17 +3,40 @@
 package macro;
 
 #open my($f), ">>", "/dev/pts/13";
-open my($f), ">>", "/tmp/macro-$<";
+open my($f), ">", "/tmp/macro-$<";
 
-sub start { 1 }
+my %basemacro = ();
+
+sub start {
+  my $macros = "$blosxom::plugin_state_dir/macros";
+    if (open my($mac), "<", $macros) {
+      print $f "loading global macro file '$macros'\n";
+      while (<$mac>) {
+	chomp;
+	if (/^#define\s+(\S+)\s+(.*)$/) {
+	  print $f "<$1> => <$2>\n";
+	  $basemacro{$1} = $2;
+	} elsif (/\S/) {
+	  print $f "unparseable line $. : $_\n";
+	}
+      }
+      my $N = keys %basemacro;
+      print $f "defined $N global macros total\n";
+      return 1;
+    } else {
+      my $eno = $!{ENOENT};
+      print $f "couldn't load base macro file '$macros': $!\n";
+      return $eno ? 1 : 0;  # ENOENT is a continuable error
+    }
+}
 
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
 
   my @lines = split /\n/, $$body_ref;
-  my %macro;
+  my %macro = %basemacro;
   my %escape;
-  my $MACPAT;
+  my $MACPAT = join "|", map quotemeta, keys %macro;
   for (@lines) {
     if (/^#define\s+(\S+)\s+(.*)$/) {
       print $f "<$1> => <$2>\n";
