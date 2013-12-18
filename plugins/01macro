@@ -3,62 +3,50 @@
 package macro;
 
 #open my($f), ">>", "/dev/pts/13";
-open my($f), ">", "/tmp/macro-$<";
+open F, ">", "/tmp/macro-$<";
 
-my %basemacro = ();
-
-sub start {
-  my $macros = "$blosxom::plugin_state_dir/macros";
-    if (open my($mac), "<", $macros) {
-      print $f "loading global macro file '$macros'\n";
-      while (<$mac>) {
-	chomp;
-	if (/^#define\s+(\S+)\s+(.*)$/) {
-	  print $f "<$1> => <$2>\n";
-	  $basemacro{$1} = $2;
-	} elsif (/\S/) {
-	  print $f "unparseable line $. : $_\n";
-	}
-      }
-      my $N = keys %basemacro;
-      print $f "defined $N global macros total\n";
-      return 1;
-    } else {
-      my $eno = $!{ENOENT};
-      print $f "couldn't load base macro file '$macros': $!\n";
-      return $eno ? 1 : 0;  # ENOENT is a continuable error
-    }
-}
+sub start { 1 }
 
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
+  local $_;
 
   my @lines = split /\n/, $$body_ref;
-  my %macro = %basemacro;
-  my %escape;
-  my $MACPAT = join "|", map quotemeta, keys %macro;
-  for (@lines) {
+  my %macro = ();
+  my $MACPAT;
+  my @outlines;
+  while (@lines) {
+    $_ = shift @lines;
     if (/^#define\s+(\S+)\s+(.*)$/) {
-      print $f "<$1> => <$2>\n";
+      print F "<$1> => <$2>\n";
       $macro{$1} = $2;
       $MACPAT = join "|", map quotemeta, keys %macro;
-      print $f "Pattern: $MACPAT\n";
+      print F "Pattern: $MACPAT\n";
       $_ = "";
       next;
     } elsif (/^#undefall\s*/) {
       %macro = ();
       $MACPAT = "";
-      print $f "Pattern: $MACPAT\n";
+      print F "Pattern: $MACPAT\n";
       $_ = "";
-    }       
+    } elsif (/^#load (\w+)\s*/) {
+      my $macros = "$blosxom::plugin_state_dir/macro-$1";
+      if (open my($mac), "<", $macros) {
+	unshift @lines, <$mac>;
+	print F "Loaded macros from $macros\n";
+      } else {
+	warn "Couldn't read macro file '$macros': $!";
+      }
+    }
 #    for my $m (keys %macro) {
       my $old = $_;
       s/($MACPAT)/$macro{$1}/g;
-      print $f "  $old\n  $_\n\n" if $old ne $_;
+      print F "  $old\n  $_\n\n" if $old ne $_;
 #    }
+    push @outlines, $_;
   }
 
-  $$body_ref = join "\n", @lines;
+  $$body_ref = join "\n", @outlines;
   return 1;
 }
 
