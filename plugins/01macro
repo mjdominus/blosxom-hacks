@@ -37,6 +37,7 @@ sub story {
       } else {
 	warn "Couldn't read macro file '$macros': $!";
       }
+      next;
     }
 #    for my $m (keys %macro) {
       my $old = $_;
