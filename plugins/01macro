@@ -9,17 +9,27 @@ sub start { 1 }
 
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
-  local $_;
+  my $meta = $_[8];
 
-  my @lines = split /\n/, $$body_ref;
+  local $_;
   my %macro = ();
-  my $MACPAT;
+
+  if ($meta->{macros}) {
+    for my $file (split /,\s*/, $meta->{macros}) {
+      print F "META section requires macro file '$file'\n";
+      %macro = (%macro, load($file));
+    }
+  }
+
+  my $MACPAT = join "|", map quotemeta, keys %macro;
+  print F "Initial pattern: $MACPAT\n";
+  my @lines = split /\n/, $$body_ref;
   my @outlines;
   while (@lines) {
     $_ = shift @lines;
-    if (/^#define\s+(\S+)\s+(.*)$/) {
-      print F "<$1> => <$2>\n";
-      $macro{$1} = $2;
+    if (my ($k, $v) = define1($_)) {
+      print F "<$k> => <$v>\n";
+      $macro{$k} = $v;
       $MACPAT = join "|", map quotemeta, keys %macro;
       print F "Pattern: $MACPAT\n";
       $_ = "";
@@ -30,14 +40,9 @@ sub story {
       print F "Pattern: $MACPAT\n";
       $_ = "";
     } elsif (/^#load (\w+)\s*/) {
-      my $macros = "$blosxom::plugin_state_dir/macro-$1";
-      if (open my($mac), "<", $macros) {
-	unshift @lines, <$mac>;
-	print F "Loaded macros from $macros\n";
-      } else {
-	warn "Couldn't read macro file '$macros': $!";
-      }
-      next;
+      %macro = (%macro, load($1));
+      $MACPAT = join "|", map quotemeta, keys %macro;
+      print F "Pattern: $MACPAT\n";
     }
 #    for my $m (keys %macro) {
       my $old = $_;
@@ -49,6 +54,34 @@ sub story {
 
   $$body_ref = join "\n", @outlines;
   return 1;
+}
+
+sub load {
+  my ($file) = @_;
+  my $macros = "$blosxom::plugin_state_dir/macro-$file";
+  if (open my($mac), "<", $macros) {
+    my @lines = <$mac>;
+    printf F "Loaded %d lines from %s\n", 0+@lines, $macros;
+    return define(@lines);
+  } else {
+    warn "Couldn't read macro file '$macros': $!";
+    return ();
+  }
+}
+
+sub define {
+  map define1($_), @_;
+}
+
+sub define1 {
+  my ($line) = @_;
+  if ($line =~ /^\#define\s+(\S+)\s+(.*)$/) {
+    warn "defining '$1' as '$2'\n";
+    return ($1, $2);
+  } else {
+    warn "Line `$line' does not look like a definition\n";
+    return ();
+  }
 }
 
 1;
