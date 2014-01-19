@@ -187,7 +187,7 @@ sub story {
   my $updated_time;
   # <updated>: derive by stat()ing the file for its mtime:
   # $updated_time = stat("$blosxom::datadir$path/$filename.$blosxom::file_extension")->mtime;
-  if (meta::has($file) && my $modified = meta::get_time($file, "updated")) {
+  if (meta::has($file) && (my $modified = meta::get_time($file, "updated"))) {
     $updated_time = $modified;
   } else {
     $updated_time = $published_time;
