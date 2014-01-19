@@ -50,15 +50,15 @@ sub get_date {
 
 sub convert_date {
   my ($date) = @_;
-  print $f "Converting date '$date'\n";
+  print $f "  Converting date '$date'\n";
+  my $res;
   if (! defined $date) {
-    carp "Undefined date '$date'";
-    return undef;
+    print $f "  Undefined date '$date'";
   } elsif ($date =~ /^\d+$/) {
-    return $date; # assumed to already be epoch time
+    $res = $date; # assumed to already be epoch time
   } elsif (my ($y, $m, $d) = $date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
     require Time::Local;
-    return Time::Local::timelocal(0,0,0, $d, $m-1, $y-1900);
+    $res = Time::Local::timelocal(0,0,0, $d, $m-1, $y-1900);
   } elsif (my ($y, $m, $d, $h, $mn, $s) =
 	   $date =~ /^ \s*
 		     (\d\d\d\d)-(\d\d)-(\d\d)
@@ -66,11 +66,12 @@ sub convert_date {
 		     (\dd):(\dd):(\dd)
 		     \s* $/x) {
     require Time::Local;
-    return Time::Local::timelocal($s, $mn,$h, $d, $m-1, $y-1900);
+    $res = Time::Local::timelocal($s, $mn,$h, $d, $m-1, $y-1900);
   } else {
-    carp "Unrecognized date '$date'";
-    return undef;
+    print $f "  Unrecognized date '$date'";
   }
+  printf $f "  Result is %s\n", defined($res) ? $res : "UNDEF";
+  return $res;
 }
 
 sub has {
