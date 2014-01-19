@@ -24,7 +24,7 @@ sub filter {
     my $has_meta = meta::has($file);
     my $meta_published = $has_meta ? meta::get_date($file, "published") : 1;
     my $has_notyet = -e $notyet;
-    my $publish = 0 + (! $has_notyet && $meta_published);
+    my $publish = 0 + ($meta_published && ! $has_notyet);
 
     print F "  has_meta: $has_meta meta_published: $meta_published\n";
     print F "  has_notyet: $has_notyet ($notyet)\n";
