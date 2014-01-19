@@ -42,6 +42,37 @@ sub get {
   return $z;
 }
 
+sub get_date {
+  my ($path, $key) = @_;
+  my $date = get($path, $key);
+  return convert_date($date);
+}
+
+sub convert_date {
+  my ($date) = @_;
+  print $f "Converting date '$date'\n";
+  if (! defined $date) {
+    carp "Undefined date '$date'";
+    return undef;
+  } elsif ($date =~ /^\d+$/) {
+    return $date; # assumed to already be epoch time
+  } elsif (my ($y, $m, $d) = $date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
+    require Time::Local;
+    return Time::Local::timelocal(0,0,0, $d, $m-1, $y-1900);
+  } elsif (my ($y, $m, $d, $h, $mn, $s) =
+	   $date =~ /^ \s*
+		     (\d\d\d\d)-(\d\d)-(\d\d)
+		     (?:\s+|[Tt])
+		     (\dd):(\dd):(\dd)
+		     \s* $/x) {
+    require Time::Local;
+    return Time::Local::timelocal($s, $mn,$h, $d, $m-1, $y-1900);
+  } else {
+    carp "Unrecognized date '$date'";
+    return undef;
+  }
+}
+
 sub has {
   my ($path) = @_;
   return get($path, 'HAS');

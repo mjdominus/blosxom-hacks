@@ -12,22 +12,6 @@ sub start {
 }
 
 use Carp 'carp';
-sub convert_date {
-  my ($date) = @_;
-  print F "Converting date '$date'\n";
-  if (! defined $date) {
-    carp "Undefined date '$date'";
-    return undef;
-  } elsif ($date =~ /^\d+$/) {
-    return $date; # assumed to already be epoch time
-  } elsif (my ($y, $m, $d) = $date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
-    require Time::Local;
-    return Time::Local::timelocal(0,0,0, $d, $m-1, $y-1900);
-  } else {
-    carp "Unrecognized date '$date'";
-    return undef;
-  }
-}
 
 # Suppress articles with "notyet" files
 sub filter {
@@ -37,11 +21,10 @@ sub filter {
     (my $file = $k) =~ s{^$blosxom::datadir}{}o;
     $file =~ s/\.\w+$//;
     print F "$file $k $f->{$k}\n";
-    my $meta_published = meta::get($file, "published");
-    $meta_published = convert_date($meta_published) if defined $meta_published;
     my $has_meta = meta::has($file);
+    my $meta_published = $has_meta ? meta::get_date($file, "published") : 1;
     my $has_notyet = -e $notyet;
-    my $publish = 0 + (! $has_notyet && ($has_meta ? $meta_published : 1));
+    my $publish = 0 + (! $has_notyet && $meta_published);
 
     print F "  has_meta: $has_meta meta_published: $meta_published\n";
     print F "  has_notyet: $has_notyet ($notyet)\n";
