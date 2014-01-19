@@ -184,8 +184,14 @@ sub story {
 				$published_utc[2],
 				$published_utc[1]);
 
+  my $updated_time;
   # <updated>: derive by stat()ing the file for its mtime:
-  my $updated_time = stat("$blosxom::datadir$path/$filename.$blosxom::file_extension")->mtime;
+  # $updated_time = stat("$blosxom::datadir$path/$filename.$blosxom::file_extension")->mtime;
+  if (meta::has($file) && my $modified = meta::get_time($file, "updated")) {
+    $updated_time = $modified;
+  } else {
+    $updated_time = $published_time;
+  }
   $updated_time = $published_time if $published_time > $updated_time;
   my @updated_utc = gmtime($updated_time);
   $updated_utc_date = sprintf("%4d-%02d-%02dT%02d:%02d:00Z",
