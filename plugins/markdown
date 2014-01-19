@@ -21,7 +21,7 @@ sub story {
   }
 
   require Text::Markdown;
-  if ($blosxom::flavour eq "html") {
+  if ($blosxom::flavour eq "html" || 1) {
     $$body_ref = Text::Markdown::markdown($$body_ref);
   } else {
     print F "Don't know how to handle markdown for flavour $blosxom::flavour; skipping.\n";
