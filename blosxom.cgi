@@ -287,7 +287,7 @@ else {
   my $content_type = (&$template($path_info,'content_type',$flavour));
   $content_type =~ s!\n.*!!s;
 
-  $header = {-type=>$content_type};
+  $header = {-type=>$content_type, -charset => "UTF-8"};
 
   print generate('dynamic', $path_info, "$path_info_yr/$path_info_mo_num/$path_info_da", $flavour, $content_type);
 }
