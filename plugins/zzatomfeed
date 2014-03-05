@@ -167,7 +167,7 @@ sub head {
 
 sub story {
   my($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
-
+  my $file = "$path/$filename";
   use File::stat;
 
   # set up <category>:
@@ -193,7 +193,7 @@ sub story {
 #  print $f " %INC: ", map("  $_\n", map( "$_ => $INC{$_}", keys(%INC) )), "\n";
   print $f " meta::has($file) = ", meta::has($file), "\n";
   print $f " meta::get_date($file, updated) = ", meta::get_date($file, "updated"), "\n";
-  if (meta::has($file) && (my $modified = meta::get_time($file, "updated"))) {
+  if (meta::has($file) && (my $modified = meta::get_date($file, "updated"))) {
     $updated_time = $modified;
   } else {
     $updated_time = $published_time;
