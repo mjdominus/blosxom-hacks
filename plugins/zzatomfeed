@@ -10,6 +10,7 @@
 # Blosxom Plugin Docs: http://www.raelity.org/apps/blosxom/plugin.shtml
 
 package zzatomfeed;
+open my($f), ">", "/tmp/zzatomfeed.$>";
 
 # ----- Mandatory configurable variables -----
 
@@ -187,12 +188,18 @@ sub story {
   my $updated_time;
   # <updated>: derive by stat()ing the file for its mtime:
   # $updated_time = stat("$blosxom::datadir$path/$filename.$blosxom::file_extension")->mtime;
+  print $f "checking updated time for $file:\n";
+  print $f " plugins: @blosxom::plugins\n";
+#  print $f " %INC: ", map("  $_\n", map( "$_ => $INC{$_}", keys(%INC) )), "\n";
+  print $f " meta::has($file) = ", meta::has($file), "\n";
+  print $f " meta::get_date($file, updated) = ", meta::get_date($file, "updated"), "\n";
   if (meta::has($file) && (my $modified = meta::get_time($file, "updated"))) {
     $updated_time = $modified;
   } else {
     $updated_time = $published_time;
   }
   $updated_time = $published_time if $published_time > $updated_time;
+  print $f " updated_time = $updated_time = ", scalar(localtime($updated_time)), "\n";
   my @updated_utc = gmtime($updated_time);
   $updated_utc_date = sprintf("%4d-%02d-%02dT%02d:%02d:00Z",
 			      $updated_utc[5]+1900,
