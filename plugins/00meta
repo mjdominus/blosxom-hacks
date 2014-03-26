@@ -34,6 +34,11 @@ sub end {
   untie %metadb;
 }
 
+# Retrieve metadata
+# There is no corresponding put() function
+# That is because metadata is stored
+# by writing it into the META section
+# of the individual articles.
 sub get {
   my ($path, $key) = @_;
   print $f "call: get($path, $key)\n";
@@ -72,6 +77,17 @@ sub convert_date {
   }
   printf $f "  Result is %s\n", defined($res) ? $res : "UNDEF";
   return $res;
+}
+
+# Like get(),
+# but assumes that the value is a comma-separated list,
+# and returns the list of items in it
+sub get_list {
+  my ($path, $key, $opt) = @_;
+  my $sep = $opt->{separator} // qr/,\s*/;
+  my $v = get($path, $key) or return;
+  my @items = split $sep, $v;
+  wantarray ? @items : \@items;
 }
 
 sub has {
