@@ -155,7 +155,7 @@ sub put_metadata_items {
 sub meta_key {
   my ($key, $item) = @_;
   return $key unless defined($item) && length($item) > 0;
-  return join "::", $key, $item;
+  return join "::", $key, lc($item);
 }
 
 sub trim {
