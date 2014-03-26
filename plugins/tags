@@ -1,0 +1,88 @@
+
+package tags;
+# This library has two functions:
+# 1. generate the tag database,
+# in which each tag is mapped to a list of relevant articles
+# 2. answer queries about the contents of the tag database
+#
+# The tag database is a Tie::File::Hash
+
+my $tagdb = "$blosxom::plugin_state_dir/Tags";
+open my($f), ">", "/tmp/tags.$<";
+print $f "Starting at " . localtime() . "\n";
+print $f "Tie::File:Hash version $Tie::File::Hash::VERSION\n";
+our %tagdb;
+
+
+
+sub start {
+  tie %tagdb => 'Tie::File::Hash' => $tagdb,
+    {
+     mode => O_RDWR | O_CREAT,
+     flock => LOCK_EX,
+    }
+      or die "Couldn't tie $tagdb: $!";
+  *blosxom::TAGGED = \%;
+  print $f "tags plugin tied $tagdb\n";
+  return 1;
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
+  my $q = "$path/$filename";
+
+  # Fetch the tags we saw last time for this article,
+  # so that we can compute diffs against it
+  my %old_tags = set(split /,/, $tagdb{$q});
+  my $new_tags = meta::get($q, 'tags');
+  my %new_tags = set(split /,/, $new_tags);
+
+  for my $k (keys %old_tags) {
+    if (! exists $new_tags{$k}) {
+      remove_tag($q, $k);
+    }
+  }
+
+  for my $k (keys %new_tags) {
+    if (! exists $old_tags{$k}) {
+      add_tag($q, $k);
+    }
+  }
+
+  $tagdb{$q} = $new_tags;
+  return 1;
+}
+
+sub set {
+  map { $_ => 1 } @_;
+}
+
+sub add_tag {
+  my ($story, $tag) = @_;
+  my @stories = get_stories($tag);
+  unless (grep $_ eq $story, @stories) {
+    put_stories($tag, @stories, $story);
+  }
+}
+
+sub remove_tag {
+  my ($story, $tag) = @_;
+  my @stories_a = get_stories($tag);
+  my @stories_b = grep $_ ne $story, @stories;
+  if (@stories_a != @stories_b) {
+    put_stories($tag, @stories_b);
+  }
+}
+
+sub get_stories {
+  my ($tag) = @_;
+  split /,/, $tagdb{$tag};
+}
+
+sub put_stories {
+  my ($tag, @stories) = @_;
+  $tagdb{$tag} = join "," => @stories;
+}
+
+1;
+
