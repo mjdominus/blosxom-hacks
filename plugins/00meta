@@ -90,9 +90,19 @@ sub get_list {
   wantarray ? @items : \@items;
 }
 
+# has($path) returns true if the path has any metadata
+# has($path, $key) returns true if the path has metadata for $key
 sub has {
-  my ($path) = @_;
-  return get($path, 'HAS');
+  my ($path, $key) = @_;
+  if (defined $key) {
+    my @items = get_list($path, 'HAS');
+    for my $item (@items) {
+      return 1 if $item eq $key;
+    }
+    return;
+  } else {
+    return get($path, 'HAS');
+  }
 }
 
 sub story {
