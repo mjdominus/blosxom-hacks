@@ -21,29 +21,53 @@ sub filter {
     (my $file = $k) =~ s{^$blosxom::datadir}{}o;
     $file =~ s/\.\w+$//;
     print F "$file $k $f->{$k}\n";
-    my $has_meta = meta::has($file);
-    my $meta_published = $has_meta ? meta::get_date($file, "published") : 1;
+
+    # Publication date:
+    # If there is an explicit "published" in the META section, that is controlling
+    #   (but published=0 is ignored in test mode)
+    # If not, use the cached date if there is one
+    # Otherwise, use the file's mtime
+
+    # Publish the article if its publication date is not in the future
+    # and if the date is not zero
+    # and if there is no NOTYET file
+
+    # In test mode, "publish" ignore all that stuff; only suppress the
+    # article if its date is more than two weeks in the future.
+
+    my $has_meta_published = meta::has_key($file, "published");
+    my $meta_published = meta::get_date($file, "published");
     my $has_notyet = -e $notyet;
-    my $publish = 0 + ($meta_published && ! $has_notyet);
+    my $mtime = (stat $k)[9];
+    my $cached_date = $f->{$k};
+    my $test_publication_date = $meta_published || $cached_date || $mtime; # used only in test mode
+    my $publication_date = $has_meta_published  ? $meta_published :
+                           defined $cached_date ? $cached_date : $mtime;
 
-    print F "  has_meta: $has_meta meta_published: $meta_published\n";
-    print F "  has_notyet: $has_notyet ($notyet)\n";
-    print F "  date database: $f->{$k}\n";
-    print F "  WILL PUBLISH: $publish\n";
+    my $should_publish_in_testmode = $test_publication_date < $now + 14 * 86400;
+    my $should_publish   = !$has_notyet && $publication_date != 0 && $publication_date < $now;
 
-    if ($f->{$k} > $now + 86400 * 14) {
-      # completely suppress articles more than two weeks in the future,
-      # even in test mode
-      print F "  way too new ($f->{$k})\n";
-      delete $f->{$k};
-    }  elsif (! $publish || $f->{$k} > $now) {
-      $omit{$file} = 1;
-      unless ($blosxom::testmode) {
-        print F "  and not in test mode\n";
+    print F "  has_meta_published: $has_meta_published (date $meta_published)\n";
+    print F "  cached date: $cached_date\n";
+    print F "  mtime: $mtime\n";
+    print F "  selected REAL publication date: $publication_date\n";
+    print F "  selected TEST publication date: $test_publication_date\n";
+    print F "  now: $now\n";
+    print F "  has_notyet: ", $has_notyet ? "YES" : "NO", " ($notyet)\n";
+    print F "  WILL PUBLISH IN TEST MODE: ", $should_publish_in_testmode ? "YES" : "NO", "\n";
+    print F "  WILL PUBLISH LIVE: ", $should_publish ? "YES" : "NO", "\n";
+
+    if ($blosxom::testmode) {
+      if ($should_publish_in_testmode) {
+        $omit{$file} = 1 if ! $should_publish; # add WILL NOT APPEAR IN LIVE SITE header
+      } else {
         delete $f->{$k};
       }
+    } else {
+      delete $f->{$k} unless $should_publish;
     }
   }
+
   return 1;
 }
 
