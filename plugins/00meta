@@ -43,13 +43,15 @@ sub get {
   my ($path, $key) = @_;
   print $f "call: get($path, $key)\n";
   my $z = $metadb{meta_key($path, $key)};
-  print $f "  ret: $z\n";
+  print $f "  get $path $key ret: $z\n";
   return $z;
 }
 
 sub has_key {
   my ($path, $key) = @_;
+  print $f "call: has_key($path, $key)\n";
   my $z = (has($path) && exists $metadb{meta_key($path, $key)}) // 0;
+  print $f "  has key $path $key ret: $z\n";
   return $z;
 }
 
@@ -98,6 +100,7 @@ sub get_list {
 
 sub has {
   my ($path) = @_;
+  print $f "call: has($path)\n";
   return get($path, 'HAS');
 }
 
