@@ -54,9 +54,14 @@ sub DELETE {
   delete $self->{keyrec}{$key};
 }
 
-sub found_key {
+sub EXISTS {
   my ($self, $key) = @_;
   defined $self->{keyrec}{$key};
+}
+
+sub found_key {
+  my ($self, $key) = @_;
+  $self->EXISTS($key);
 }
 
 sub kv {
