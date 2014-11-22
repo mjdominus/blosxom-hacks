@@ -47,6 +47,12 @@ sub get {
   return $z;
 }
 
+sub has_key {
+  my ($path, $key) = @_;
+  my $z = (has($path) && exists $metadb{meta_key($path, $key)}) // 0;
+  return $z;
+}
+
 sub get_date {
   my ($path, $key) = @_;
   my $date = get($path, $key);
