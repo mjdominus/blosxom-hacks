@@ -1,4 +1,7 @@
 #
+# THIS IS NO LONGER USED
+# DO NOT EDIT IT
+# LOOK AT path2 INSTEAD
 
 package path;
 use HTML::TreeBuilder;

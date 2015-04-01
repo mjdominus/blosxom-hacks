@@ -5,13 +5,18 @@ use HTML::TreeBuilder;
 
 #my $blogimg = "http://www.plover.com/~mjd/pictures/blog";
 my $blogimg;
+my $first_image_url;
 
 sub start {
-  open F, ">", "/tmp/path.err";
+  open F, ">", "/tmp/path.$>";
   $blogimg = $blosxom::testmode
         ? "http://plover.com/~mjd/pictures/blog"
         : "http://pic.blog.plover.com";
   return 1;
+}
+
+sub last {
+  undef $first_image_url;
 }
 
 sub story {
@@ -56,6 +61,11 @@ sub story {
   for my $change (@changes) {
     my ($from, $to) = @$change;
     print F "Replacing [[$from]] with [[$to]]\n";
+    if (! defined $first_image_url && $from =~ /src=/) {
+      print F "Trying to set first image; to=$to\n";
+      ($first_image_url) = ($to =~ /src="(.*)"/);
+      print F "first_image_url set to $first_image_url\n"
+    }
     my $pos = index($$body_ref, $from);
     if ($pos < 0) {
       print F "!!! Couldn't find target!\n";
@@ -66,6 +76,12 @@ sub story {
   }
 
   return 1;
+}
+
+sub foot {
+  print F "In foot with first_image = $first_image_url\n";
+  $first_image_url ||= "http://pic.blog.plover.com/TOP.jpg";
+  $blosxom::output =~ s/FIRST_IMAGE_URL/$first_image_url/g;
 }
 
 1;
