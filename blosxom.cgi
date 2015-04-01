@@ -302,7 +302,7 @@ BEGIN {
 # Generate 
 sub generate {
   my($static_or_dynamic, $currentdir, $date, $flavour, $content_type) = @_;
-  print F "$currentdir $date $flavour $content_type\n";
+  print F "($currentdir,$date) $flavour $content_type\n";
   my $single_title;
   my $datepath = $date;
   my %f = %files;
@@ -425,7 +425,21 @@ sub generate {
     }
   
     # Head
-    $page_title = $single_title ? "$blog_title : $single_title" : $blog_title;
+    if ($single_title) {
+        $page_title = "$blog_title : $single_title";
+    } else {
+        my $continuation_title = "";
+        if ($currentdir) {
+            if ($currentdir =~ /\.blog$/) { $continuation_title = ": untitled article '$currentdir'" }
+            else { $continuation_title = ": category '$currentdir'" }
+        } elsif ($date) {
+            my $da = $date;
+            $da =~ s{/+$}{};
+            $continuation_title = ": $da archive";
+        }
+        $page_title = "$blog_title$continuation_title";
+    }
+
     my $head = (&$template($currentdir,'head',$flavour));
   
     # Plugins: Head
