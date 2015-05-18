@@ -1,0 +1,74 @@
+
+package topics;
+use DB_File;
+
+my %topic_table;
+my %Seen;
+
+my $min_count = 5;
+my $topic_menu;
+
+my %topic_name = (prog => "programming",
+                  "" => "uncategorized",
+                  "prog/perl" => "Perl",
+                  "lang" => "language",
+                  "lang/etym" => "etymology",
+                 "prog/haskell" => "Haskell",
+                 "math" => "Mathematics",
+                 "bio" => "biology");
+
+sub start {
+  open F, ">", "/tmp/topics.$>";
+  print F "Writing to $blosxom::plugin_state_dir/topics\n";
+  tie %topic_table,"DB_File", "$blosxom::plugin_state_dir/topics" or die $!;
+  tie %Seen,"DB_File", "$blosxom::plugin_state_dir/topics-Seen" or die $!;
+
+  build_topic_menu(\%topic_table, $n_entries, $min_count);
+
+  return 1;
+}
+
+sub build_topic_menu {
+  my ($topic_count, $n_entries, $min_count) = @_;
+  my @topics_by_count = sort { $topic_count->{$b} <=> $topic_count->{$a} }
+    keys %$topic_count;
+  my $n = 0;
+  my @links;
+  while (@topics_by_count) {
+    my $topic = shift @topics_by_count;
+    my $topic_count = $topic_count->{$topic};
+    last if $topic_count < $min_count;
+    $topic =~ s{^/}{};
+    push @entries, [$topic, $topic_count];
+    last if $n_entries > 0 && ++$n > $n_entries;
+  }
+
+  $topic_menu = "";
+  for my $e (@entries) {
+    my ($topic, $count) = @$e;
+    my $topic_name = $topic_name{$topic} // $topic;
+
+    my $entry =  qq{<tr><td bgcolor="#ccccff" class="menuitem" style="padding-right: 0;"><a href="/$topic/">\u$topic_name</a><td align='right' bgcolor="#ccccff" class="menuitem" style="padding-left: 0;">$count</tr>};
+    $topic_menu .= "$entry\n";
+  }
+
+  $topic_menu = qq{<table width="100%" style="border-spacing: 0 1px;" class='menuitem'>$topic_menu</table>\n};
+}
+
+sub story {
+  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+  my $fullpath = "$path/$filename";
+  if ($Seen {$fullpath}){
+    return;
+  }
+  $Seen{$fullpath} = 1;
+  $topic_table{$path} ++;
+ print F "$path, $filename, $base\n";
+}
+
+sub foot {
+  $blosxom::output =~ s/TOPIC_MENU/$topic_menu/g;
+}
+
+
+1;
