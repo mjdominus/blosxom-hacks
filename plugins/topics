@@ -5,7 +5,7 @@ use DB_File;
 my %topic_table;
 my %Seen;
 
-my $min_count = 5;
+my $min_count = 9;
 my $topic_menu;
 
 my %topic_name = (prog => "programming",
@@ -57,13 +57,14 @@ sub build_topic_menu {
 
 sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+  return if $blosxom::testmode;
   my $fullpath = "$path/$filename";
   if ($Seen {$fullpath}){
     return;
   }
   $Seen{$fullpath} = 1;
   $topic_table{$path} ++;
- print F "$path, $filename, $base\n";
+  print F "$path, $filename, $base\n";
 }
 
 sub foot {
