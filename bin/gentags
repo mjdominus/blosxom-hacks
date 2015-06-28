@@ -1,0 +1,5 @@
+#!/usr/bin/perl
+
+use lib '/home/mjd/misc/blog/src/lib';
+use Blosxom::MJD::Basic;
+use Blosxom::MJD::Meta;
