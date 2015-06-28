@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-
+use Carp::Always;
 # Blosxom
 # Author: Rael Dornfest <rael@oreilly.com>
 # Version: 2.0
