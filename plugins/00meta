@@ -2,7 +2,7 @@
 
 package meta;
 use lib '/home/mjd/misc/blog/src/lib';
-use Tie::File::Hash;
+use Blosxom::MJD::Meta;
 use strict;
 use Fcntl qw(O_RDWR O_CREAT LOCK_EX);
 
@@ -16,15 +16,12 @@ open my($f), ">", "/tmp/meta.$<";
 print $f "Starting at " . localtime() . "\n";
 print $f "Tie::File:Hash version $Tie::File::Hash::VERSION\n";
 our %metadb;
+our $META;
 
 sub start {
-  tie %metadb => 'Tie::File::Hash' => $metadb, 
-    {
-     mode => O_RDWR | O_CREAT,
-     flock => LOCK_EX,
-    }
-      or die "Couldn't tie $metadb: $!";
-  *blosxom::META = \%metadb;
+  $META = Blosxom::MJD::Meta->new($metadb, { debug => $f });
+  *metadb = *blosxom::META = $META->hash;
+
   print $f "meta plugin tied $metadb\n";
   return 1;
 }
@@ -32,76 +29,8 @@ sub start {
 sub end {
   print $f "Untying\n";
   untie %metadb;
-}
-
-# Retrieve metadata
-# There is no corresponding put() function
-# That is because metadata is stored
-# by writing it into the META section
-# of the individual articles.
-sub get {
-  my ($path, $key) = @_;
-  print $f "call: get($path, $key)\n";
-  my $z = $metadb{meta_key($path, $key)};
-  print $f "  get $path $key ret: $z\n";
-  return $z;
-}
-
-sub has_key {
-  my ($path, $key) = @_;
-  print $f "call: has_key($path, $key)\n";
-  my $z = (has($path) && exists $metadb{meta_key($path, $key)}) // 0;
-  print $f "  has key $path $key ret: $z\n";
-  return $z;
-}
-
-sub get_date {
-  my ($path, $key) = @_;
-  my $date = get($path, $key);
-  return convert_date($date);
-}
-
-sub convert_date {
-  my ($date) = @_;
-  print $f "  Converting date '$date'\n";
-  my $res;
-  if (! defined $date) {
-    print $f "  Undefined date '$date'";
-  } elsif ($date =~ /^\d+$/) {
-    $res = $date; # assumed to already be epoch time
-  } elsif (my ($y, $m, $d) = $date =~ /^(\d\d\d\d)-(\d\d)-(\d\d)$/) {
-    require Time::Local;
-    $res = Time::Local::timelocal(0,0,0, $d, $m-1, $y-1900);
-  } elsif (my ($y, $m, $d, $h, $mn, $s) =
-	   $date =~ /^ \s*
-		     (\d\d\d\d)-(\d\d)-(\d\d)
-		     (?:\s+|[Tt])
-		     (\dd):(\dd):(\dd)
-		     \s* $/x) {
-    require Time::Local;
-    $res = Time::Local::timelocal($s, $mn,$h, $d, $m-1, $y-1900);
-  } else {
-    print $f "  Unrecognized date '$date'";
-  }
-  printf $f "  Result is %s\n", defined($res) ? $res : "UNDEF";
-  return $res;
-}
-
-# Like get(),
-# but assumes that the value is a comma-separated list,
-# and returns the list of items in it
-sub get_list {
-  my ($path, $key, $opt) = @_;
-  my $sep = $opt->{separator} // qr/,\s*/;
-  my $v = get($path, $key) or return;
-  my @items = split $sep, $v;
-  wantarray ? @items : \@items;
-}
-
-sub has {
-  my ($path) = @_;
-  print $f "call: has($path)\n";
-  return get($path, 'HAS');
+  undef $META;
+  close $f;
 }
 
 sub story {
@@ -126,6 +55,7 @@ sub story {
       s/\s+\z//;
       my ($k, $v) = split /:\s+/, $_, 2;
       $meta{lc $k} = $v;
+      print $f "  $k => $v\n";
     }
   };
 
@@ -135,61 +65,13 @@ sub story {
     "(no title in META section)";
   };
 
-  store_metadata("$path/$filename", \%meta);
+  $META->store_metadata("$path/$filename", \%meta);
   my %tied;
   my $obj = tie %tied, 'Metadata', "$path/$filename";
   $blosxom::metadata_hash{"$path/$filename"} = \%tied;
   $blosxom::metadata_obj{"$path/$filename"} = $obj;
 
   return $BAD ? 0 : 1;
-}
-
-sub store_metadata {
-  my ($key, $md) = @_;
-  print $f "  Storing metadata for $key\n";
-  delete_metadata($key);
-  print $f "  Putting meta-metadata for $key\n";
-  put_metadata_items($key, $md);
-  print $f "  Putting metadata for $key\n";
-  while (my ($k, $v) = each %$md) {
-    $metadb{meta_key($key, $k)} = $v;
-  }
-  print $f "  Done storing metadata for $key\n";
-}
-
-sub delete_metadata {
-  my ($key) = @_;
-  my @items = get_metadata_items($key);
-  return unless @items;
-  for my $item (@items) {
-    delete $metadb{meta_key($key, $item)};
-  }
-}
-
-sub get_metadata_items {
-  my ($key) = @_;
-  my $v = $metadb{meta_key($key, "")};
-  split /,\s*/, $v;
-}
-
-sub put_metadata_items {
-  my ($key, $h) = @_;
-  $metadb{meta_key($key, "")} = join "," => sort keys %$h;
-}
-
-sub meta_key {
-  my ($key, $item) = @_;
-  return $key unless defined($item) && length($item) > 0;
-  $item = lc($item) unless $item eq "HAS";
-  my $k = join "::", $key, $item;
-  print $f " meta key is '$k'\n";
-  return $k;
-}
-
-sub trim {
-  $_[0] =~ s/^\s+//;
-  $_[0] =~ s/\s+$//;
-  return $_[0];
 }
 
 END {
