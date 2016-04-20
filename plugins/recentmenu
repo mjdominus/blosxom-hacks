@@ -16,12 +16,14 @@ sub story {
   return unless $blosxom::flavour eq "html";
   return if $$title_ref eq "";
 
-  my $link = qq{<a href="$blosxom::url$path/$filename.$blosxom::flavour"><span class=menuitem>$$title_ref</span></a>};
+ my $link = qq{<a href="$blosxom::url$path/$filename.$blosxom::flavour"><span class=menuitem>$$title_ref</span></a>};
+
   print F "<$dir> : <$date> : $link\n";
 #  return if $seen{$filename}++;
-  push @menu, $link;
+  push @menu, qq{<tr><td bgcolor="#ccccff">$link};
 #  $menu = "<ul>" . join("", map("<li>$_\n", @menu)) . "</ul>\n";
-  $menu = join "&nbsp;/ ", @menu;
+##  $menu = join "&nbsp;/ ", @menu;
+    $menu = "<table>\n@menu</table>\n"
 #  print F "$link\n";
 }
 
