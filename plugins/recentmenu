@@ -20,10 +20,10 @@ sub story {
 
   print F "<$dir> : <$date> : $link\n";
 #  return if $seen{$filename}++;
-  push @menu, qq{<tr><td bgcolor="#ccccff">$link};
+  push @menu, qq{<tr><td class="menuitem" bgcolor="#ccccff">$link};
 #  $menu = "<ul>" . join("", map("<li>$_\n", @menu)) . "</ul>\n";
 ##  $menu = join "&nbsp;/ ", @menu;
-    $menu = "<table>\n@menu</table>\n"
+    $menu = join "\n", @menu, "";
 #  print F "$link\n";
 }
 
