@@ -60,38 +60,27 @@ VCA	0198534469	Visual Complex Analysis	8883968
 Little Brain	Communist Manifesto     0451527100      The Communist
 Manifesto 1259947
 Ball Four       0020306652      Ball Four       5141204
-Joking   0553346687     Surely You're Joking, Mr. Feynman
-1052996
-Light and Color 0387979352      Light and Color in the Outdoors
-8591153
+Joking   0553346687     Surely You're Joking, Mr. Feynman	1052996
+Light and Color 0387979352      Light and Color in the Outdoors	8591153
 Cyberiad        0156027593      The Cyberiad    8487895
 C Explained     0316180661      Consciousness Explained 10328890
-Math Notations  0486677664      A History of Mathematical Notations
-1281901
-Sipser  0534950973      Introduction to the Theory of Computation
-1051819\
-8
-GJ      0716710455      Computers and Intractibility: A Guide to the
-Theory of \
-NP-Completeness  1387954
+Math Notations  0486677664      A History of Mathematical Notations	1281901
+Sipser  0534950973      Introduction to the Theory of Computation	10518198
+GJ      0716710455      Computers and Intractibility: A Guide to the Theory of NP-Completeness	1387954
 Kelley Topology 0387901256      General Topology        10655884
 Quine Math Logic        0674554515      Mathematical Logic
 1352466
 Wolf    1565923987      Mastering Algorithms with perl  10257183
-Britannica Treasury     0670835684      The Treasury of the
-Encyclop&aelig;dia \
-Britannica       1340549
+Britannica Treasury     0670835684      The Treasury of the Encyclop&aelig;dia Britannica	1340549
 Baroque1        0060593083      Quicksilver     10314186
 Baroque2        0060733357      The Confusion   9722714
 Baroque3        0060750863      The System of the World 10020560
 Rainbows End    0312856849      Rainbows End    10350313
 Leviathan       0760755930      Leviathan       12408782
-Lions   1573980137      Lions' Commentary on Unix 6th Edition
-9720466
+Lions   1573980137      Lions' Commentary on Unix 6th Edition	9720466
 KR      0131103628      The C Programming Language      10689693
 Priest  0199263302      In Contradiction        11107134
-Holdouts        0486294250      New York's Architectural Holdouts
-1280549
+Holdouts        0486294250      New York's Architectural Holdouts 1280549
 VCA     0198534469      Visual Complex Analysis 8883968
 Little Brain	0142400647	Me and My Little Brain	8383567
 Bargain for Frances	006444001X	A Bargain for Frances	7253721
@@ -100,8 +89,8 @@ KnuthII	0201896842	The Art of Computer Programming: Volume 2, Seminumerical Algo
 Armada	0618565914	The Defeat of the Spanish Armada	-
 Ducklings	0670451495	Make Way for Ducklings	-
 GeoPlay	0866513515	Geometric Playthings	-
-Tootle	0307020970	Tootle	13820367
-WITNOTB	0671628321	What is the Name of this Book?	-
+Tootle	0307020970	Tootle	13820367	-
+WITNOTB	0671628321	What is the Name of this Book?	1435926927
 SICP	0262011532	Structure and Interpretation of Computer Programs	15031027
 Polya	0691119663	How to Solve It	14620504
 Claudius	0679724773	I, Claudius	13781128
