@@ -15,7 +15,33 @@ my %topic_name = (prog => "programming",
                   "lang/etym" => "etymology",
                  "prog/haskell" => "Haskell",
                  "math" => "Mathematics",
-                 "bio" => "biology");
+                 "math/se" => "Math.SE",
+                 "bio" => "biology",
+		 "aliens/dd" => "Cosmic Call"
+		 );
+
+# This doesn't work properly because it doesn't
+# distinguish between published and unpublished
+# articles.  Postpone it until the META
+# library is broken out.
+unless (caller) {
+  require File::Find;
+
+  # FIX THIS XXX
+  $blosxom::plugin_state_dir = "/home/mjd/misc/blog/plugins/state";
+  $blosxom::datadir = "/home/mjd/misc/blog/entries";
+  exit unless start();
+
+  my $wanted = sub {
+    return unless /\.blog$/ && -f ;
+    my ($dir, $file) = ($File::Find::dir, $_);
+    $dir =~ s/^$blosxom::datadir//;
+    $file =~ s/\.blog$//;
+    print F "* $dir / $file\n";
+    __PACKAGE__->story($dir, $file);
+  };
+  File::Find::find($wanted, $blosxom::datadir);
+}
 
 sub start {
   open F, ">", "/tmp/topics.$>";
