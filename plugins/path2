@@ -80,7 +80,7 @@ sub story {
 
 sub foot {
   print F "In foot with first_image = $first_image_url\n";
-  $first_image_url ||= "http://pic.blog.plover.com/TOP.jpg";
+  $first_image_url ||= "http://pic.blog.plover.com/FIRST_IMAGE_DEFAULT.jpg";
   $blosxom::output =~ s/FIRST_IMAGE_URL/$first_image_url/g;
 }
 
