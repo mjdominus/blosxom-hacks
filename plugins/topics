@@ -41,6 +41,7 @@ sub build_topic_menu {
   while (@topics_by_count) {
     my $topic = shift @topics_by_count;
     my $topic_count = $topic_count->{$topic};
+    print F "topic $topic has $topic_count item(s)\n";
     last if $topic_count < $min_count;
     $topic =~ s{^/}{};
     push @entries, [$topic, $topic_count];
@@ -67,7 +68,7 @@ sub story {
     return;
   }
   $Seen{$fullpath} = 1;
-  $topic_table{$path} ++;
+  $topic_table{$path} = $topic_table{$path} + 1;
   print F "$path, $filename, $base\n";
 }
 
