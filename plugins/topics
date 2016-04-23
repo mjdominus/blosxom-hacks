@@ -15,7 +15,11 @@ my %topic_name = (prog => "programming",
                   "lang/etym" => "etymology",
                  "prog/haskell" => "Haskell",
                  "math" => "Mathematics",
-                 "bio" => "biology");
+                 "math/se" => "Math.SE",
+                 "bio" => "biology",
+                 "aliens/dd" => "Cosmic Call"
+                 );
+
 
 sub start {
   open F, ">", "/tmp/topics.$>";
