@@ -9,7 +9,9 @@ use Getopt::Std;
 
 getopts('n') or usage();
 
-my $blogdate = Blosxom::MJD::Date->new("./dates");
+my $blogdate = Blosxom::MJD::Date->new("./dates")
+    or die "No ./dates file\n";
+
 # my $blogdate = Blosxom::MJD::Date->new();
 
 # http://web.archive.org/web/20071216004854/http://blog.plover.com/2007/
