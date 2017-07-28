@@ -3,7 +3,7 @@
 package booklink;
 
 my $bookdb = "$blosxom::plugin_state_dir/books";
-#open my($f), ">>", "/tmp/booklink.$<";
+open my($f), ">", "/tmp/booklink.$<";
 tie my(%book) => "booklink::data";
 
 sub start { 
@@ -25,7 +25,24 @@ sub start {
         (my $imgnum2 = $imgnum) =~ s/\d{4}$/0000/;
         $result = qq{http://images.barnesandnoble.com/images/$imgnum2/$imgnum.jpg};
       } else {
-        $result = qq{http://www.powells.com/cgi-bin/imageDB.cgi?isbn=$isbn};
+#       This one stopped working sometime before 20170719      	
+#       $result = qq{http://www.powells.com/cgi-bin/imageDB.cgi?isbn=$isbn};
+#
+#       Powell's covers stopped working with ISBN10s, and I wrote this
+#       to try to fix it, but it doesn't work at all
+#  	my $isbn13 = length($isbn) == 10 ? "978$isbn" : $isbn;
+#        $result = qq{http://covers.powells.com/$isbn13.jpg};
+# This also works, but only for isbn13s:
+#        $result = qq{http://powells-covers-2.s3.amazonaws.com/$isbn.jpg};
+
+	# This works as of 20170728, but OL often doesn't have
+        # information for recent books
+        $result = qq{http://covers.openlibrary.org/b/isbn/$isbn-M.jpg};
+
+	my $lt_dev_key = "4e7443e59f586e9306d61bb521a11d8e";
+        $result = qq{http://covers.librarything.com/devkey/$lt_dev_key/medium/isbn/$isbn};
+
+#        $result = qq{http://images.amazon.com/images/P/$isbn.01.20TRZZZZ.jpg};
       };
       $f and print $f "  result: $result\n";
       $result;
@@ -33,7 +50,7 @@ sub start {
 
     my $data = {ISBN => $isbn, TITLE => $title, IMGURL => $imgurl, };
 #    $data->{IMGELT} = $imgnum eq "-" ? "" : qq{<IMG SRC="$data->{IMGURL}" BORDER="0" ALIGN="center" ALT="$data->{TITLE}"  >};
-     $data->{IMGELT} = qq{<IMG SRC="$data->{IMGURL}" BORDER="0" ALIGN="center" ALT="$data->{TITLE}"  >};
+     $data->{IMGELT} = qq{<IMG SRC="$data->{IMGURL}" BORDER="0" ALIGN="center" ALT="$data->{TITLE} $data->{IMGURL}"  >};
 
     $book{$isbn} = $book{$tag} = $data;
   }
@@ -47,11 +64,10 @@ sub story {
 
   $$body_ref =~ s{<book>([\w ]+)</book>}
                  {<div class="bookbox"><table align=right width="14%" bgcolor="#ffffdd" border=1><tr><td align=center>
-<font size="-1">Order</font><br>
-<cite><font size="-1">$book{$1}{TITLE}</font></cite><br>
-<A HREF="http://www.powells.com/partner/29575/biblio/$book{$1}{ISBN}">$book{$1}{IMGELT}</a><BR>
-<A HREF="http://www.powells.com/partner/29575/biblio/$book{$1}{ISBN}"><font size="-1">with kickback</font></a><br>
-<A HREF="http://www.powells.com/biblio/$book{$1}{ISBN}"><font size="-1">no kickback</font></a>
+<A HREF="http://www.powells.com/partner/29575/biblio/$book{$1}{ISBN}"><font size="-2">Order</font><br>
+<cite><font>$book{$1}{TITLE}</font></cite><br>
+$book{$1}{IMGELT}<br>
+<font size="-2">from Powell's</font></a>
 </td></tr></table></div>}g;
 
 #  $$body_ref =~ s{booklink is disabled}
