@@ -10,8 +10,9 @@ my $first_image_url;
 sub start {
   open F, ">", "/tmp/path.$>";
   $blogimg = $blosxom::testmode
-        ? "http://plover.com/~mjd/pictures/blog"
-        : "http://pic.blog.plover.com";
+        ? $testmode_image_url
+        : $production_image_url;
+  die "No blog image URL defined" unless defined $blogimg;
   return 1;
 }
 

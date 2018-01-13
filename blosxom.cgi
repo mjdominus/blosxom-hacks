@@ -7,66 +7,13 @@
 
 package blosxom;
 
-# --- Configurable variables -----
+use lib '/home/mjd/src/blosxom';
+load_config();
 
-# What's this blog's title?
-$blog_title = "The Universe of Discourse";
-
-# What's this blog's description (for outgoing RSS feed)?
-$blog_description = "The Universe of Discourse (Mark Dominus Blog)";
-
-# What's this blog's primary language (for outgoing RSS feed)?
-$blog_language = "en";
-
-# Where are this blog's entries kept?
-$datadir = "/home/mjd/misc/blog/entries";
-
-# What's my preferred base URL for this blog (leave blank for automatic)?
-$url = "http://blog.plover.com/";
-
-# Should I stick only to the datadir for items or travel down the
-# directory hierarchy looking for items?  If so, to what depth?
-# 0 = infinite depth (aka grab everything), 1 = datadir only, n = n levels down
-$depth = 0;
-
-# How many entries should I show on the home page?
-$num_entries = 12;
-
-# What file extension signifies a blosxom entry?
-$file_extension = "blog";
-
-# What is the default flavour?
-$default_flavour = "html";
-
-# Should I show entries from the future (i.e. dated after now)?
-$show_future_entries = 0;
-
-# --- Plugins (Optional) -----
-
-# Where are my plugins kept?
-$plugin_dir = "/home/mjd/src/perl/blosxom/plugins";
-
-# Where should my modules keep their state information?
-$plugin_state_dir = "$plugin_dir/state";
-
-# --- Static Rendering -----
-
-# Where are this blog's static files to be created?
-$static_dir = "/home/mjd/misc/blog/static";
-
-# What's my administrative password (you must set this for static rendering)?
-$static_password = "blurfl";
-
-# What flavours should I generate statically?
-@static_flavours = qw/html rss atom/;
-
-# Should I statically generate individual entries?
-# 0 = no, 1 = yes
-$static_entries = 1;
 
 # --------------------------------
 
-use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %template $template $depth $num_entries $file_extension $default_flavour $static_or_dynamic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $entries $output $header $show_future_entries %files %indexes %others $page_title!;
+use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %template $template $depth $num_entries $file_extension $default_flavour $static_or_dynamic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $entries $output $header $show_future_entries %files %indexes %others $page_title $default_input_format!;
 
 #open DIAGNOSIS, ">", "/tmp/warnstdout";
 #{ my $ofh = select DIAGNOSIS;
@@ -79,8 +26,10 @@ use strict;
 use FileHandle;
 use File::Find;
 use File::stat;
+use Digest::SHA1;
 use Time::localtime;
 use CGI qw/:standard :netscape/;
+use POSIX ('strftime');
 
 $version = "2.0";
 
@@ -389,7 +338,6 @@ sub generate {
 
       my $st_date_header = "";
       $curdate ne $date and $curdate = $date and $st_date_header = $date;
-      
 
       use vars qw/ $title $body $raw /;
       if (-f "$path_file" && $fh->open("< $path_file")) {
@@ -561,6 +509,31 @@ sub PRINT {
 }
 
 package blosxom;
+
+# Figure out which blog configuration to load, then load it
+#
+# Search order:
+#  1. command-line option -blog-name
+#  2. query parameter blog-name
+#  3. SERVERNAME
+#  4. Default: 'blog'
+
+sub load_config {
+    my $default_blog_name = 'blog';
+
+    # CGI.pm makes this work in both command-line and web mode
+    my $blog_name = param('-blog-name');
+    if (!$blog_name and $ENV{SERVER_NAME}) {
+	($blog_name) = $ENV{SERVER_NAME} =~ /\A ([\w-]+) /x;
+    }
+    $blog_name ||= $default_blog_name;
+
+    print F "Selected blog configuration '$blog_name'\n";
+    print F "SERVERNAME = '$ENV{SERVER_NAME}'\n";
+    require "blosxom-config/$blog_name.pl";
+    print F "Loaded config for '$blog_title' ($datadir)\n";
+    return 1;
+}
 
 # Default HTML and RSS template bits
 __DATA__
