@@ -59,7 +59,7 @@ $logo_url = "";
 
 # What template placeholder in your flavour template should I replace with feed-level <updated>?
 # If you are using the built-in templates, leave this alone.
-my $template_placeholder = "{{{updated}}}";
+my $template_placeholder = "\\{\\{\\{updated}}}";
 
 # Enclosures support
 # ------------------
