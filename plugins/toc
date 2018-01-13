@@ -6,8 +6,8 @@ my $db = "$blosxom::plugin_state_dir/toc.db";
 my $target = $blosxom::datadir;
 my @articles; 
 
-sub start { 
-  open F, ">", "/tmp/toc.err";
+sub start {
+  open F, ">", "/tmp/toc.$>";
 #  tie %TITLE, 'DB_File', O_RDWR | O_CREAT;
   @articles = ();
   return 1;
