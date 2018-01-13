@@ -60,11 +60,9 @@ sub formula {
     # Google handles $...$ and $$...$$ reasonably
     my $center = $tex =~ /^\s*\$\$/;
     $tex =~ s/(\W)/sprintf("%%%02x", ord($1))/eg;
-    my $res = qq{<img src="https://chart.googleapis.com/chart?chf=bg,s,00000000&cht=tx&chl=$tex">};
+    my $res = qq{<img src="https://chart.apis.google.com/chart?chf=bg,s,00000000&cht=tx&chl=$tex">};
     $res = qq{<p align=center>$res</p>} if $center;
     return $res;
-  } elsif ($formula_provider eq "mathtran") {
-    # http://www.mathtran.org/
   } else {
     die "Unknown formula rendering provider '$formula_provider'";
   }
