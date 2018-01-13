@@ -6,7 +6,7 @@
 package path;
 use HTML::TreeBuilder;
 
-my $blogimg = "http://pic.blog.plover.com/";
+my $blogimg = "https://pic.blog.plover.com/";
 
 sub start { 
 #  open F, ">", "/tmp/path.err";

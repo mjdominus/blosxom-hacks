@@ -20,7 +20,7 @@ sub start {
       $f and print $f "  imgnum: <$imgnum>\n";
       if ($imgnum =~ /^COVERS\.\w+$/) {
         $imgnum =~ s/COVERS/$tag/;
-        $result = qq{http://pic.blog.plover.com/covers/$imgnum};
+        $result = qq{https://pic.blog.plover.com/covers/$imgnum};
       } elsif ($imgnum =~ /^\d+$/ && 0) {   # DISABLED
         (my $imgnum2 = $imgnum) =~ s/\d{4}$/0000/;
         $result = qq{http://images.barnesandnoble.com/images/$imgnum2/$imgnum.jpg};
