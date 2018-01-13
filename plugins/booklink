@@ -35,12 +35,16 @@ sub start {
 # This also works, but only for isbn13s:
 #        $result = qq{http://powells-covers-2.s3.amazonaws.com/$isbn.jpg};
 
-	# This works as of 20170728, but OL often doesn't have
-        # information for recent books
-        $result = qq{http://covers.openlibrary.org/b/isbn/$isbn-M.jpg};
+	 if (length($isbn) == 13) {
+	   $result = qq{https://covers.powells.com/$isbn.jpg};
+	 } else {
+	   # This works as of 20170728, but OL often doesn't have
+	   # information for recent books
+	   $result = qq{http://covers.openlibrary.org/b/isbn/$isbn-M.jpg};
 
-	my $lt_dev_key = "4e7443e59f586e9306d61bb521a11d8e";
-        $result = qq{http://covers.librarything.com/devkey/$lt_dev_key/medium/isbn/$isbn};
+	   my $lt_dev_key = "4e7443e59f586e9306d61bb521a11d8e";
+	   $result = qq{http://covers.librarything.com/devkey/$lt_dev_key/medium/isbn/$isbn};
+	 }
 
 #        $result = qq{http://images.amazon.com/images/P/$isbn.01.20TRZZZZ.jpg};
       };
