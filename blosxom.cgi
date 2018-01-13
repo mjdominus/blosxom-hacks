@@ -349,7 +349,11 @@ sub generate {
       my $story = (&$template($path,'story',$flavour));
   
       # Plugins: Story
-      foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('story') and $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath, $blosxom::metadata_hash{"$path/$fn"}) }
+      foreach my $plugin ( @plugins ) { 
+	  if ($plugins{$plugin} > 0 and $plugin->can('story')) {
+	      $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath, $blosxom::metadata_hash{"$path/$fn"})
+	  }
+      }
 
       # If an archive page has only one article, it is stored in
       # $single_title, which is later inserted into $page_title, which
