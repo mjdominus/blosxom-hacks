@@ -18,7 +18,9 @@ sub story {
   my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $dir, $date, $meta) = @_;
   print F "--- STORY @_\n";
   print F "  Flavour: $blosxom::flavour\n";
-  unless (exists $meta->{formatter} && lc($meta->{formatter}) eq "markdown") {
+  print F "  Default input format: $blosxom::default_input_format\n";
+  unless (exists $meta->{formatter} && lc($meta->{formatter}) eq "markdown"
+          or $blosxom::default_input_format eq "markdown") {
     print F "    Does not specify markdown formatter; quitting.\n";
     return 1;
   }
