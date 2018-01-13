@@ -6,7 +6,10 @@ sub start {
   my $ofh = select F;
   $|=1;
   select $ofh;
+  require Text::Markdown;
   print F "$$ ", scalar(localtime), "\n";
+  print F "Markdown version: ", Text::Markdown->VERSION, "\n";
+  print F "Markdown file: ", $INC{"Text/Markdown.pm"}, "\n";
   print F join "\n", @INC, "";
   return 1;
 }
@@ -21,8 +24,11 @@ sub story {
   }
 
   require Text::Markdown;
+  
   if ($blosxom::flavour eq "html" || 1) {
+    my $before = $$body_ref;
     $$body_ref = Text::Markdown::markdown($$body_ref);
+print F "Converted:\n---------\n$before\n--------\nTO\n---------\n$$body_ref\n---------\n";
   } else {
     print F "Don't know how to handle markdown for flavour $blosxom::flavour; skipping.\n";
   }
