@@ -72,7 +72,9 @@ sub filter {
 }
 
 sub story {
-  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
+  my ($pkg, $arg) = @_;
+  my ($path, $filename, $story_ref, $title_ref, $body_ref) =
+    @{$arg}{qw/category filename storyref titleref bodyref/};
   return 1 unless $blosxom::testmode;
   my $q = "$path/$filename";
   $$body_ref = qq{<p><font color="red" size="+1">Will not appear in live blog</font></p>} . $$body_ref
