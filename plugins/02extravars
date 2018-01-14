@@ -1,0 +1,56 @@
+# -*- cperl -*-
+
+package extravars;
+use strict;
+use POSIX ('strftime');
+use Digest::SHA1;
+open F, ">", "/tmp/extravars.$<";
+print F scalar(localtime()), "\n";
+
+sub start { 1 }
+
+sub story {
+  my ($pkg, $arg) = @_;
+  my ($path, $filename, $story_ref, $title_ref, $body_ref, $fullpath) =
+    @{$arg}{qw/category filename storyref titleref bodyref
+	       catpath datepath metadata/};
+  print F "--- fullpath($fullpath) " . hash($arg) . "\n";
+  my %h;
+  my $date = $arg->{published_time};
+
+  ($h{fn_trimmed} = $filename) =~ s/-\d+\z//;
+  $h{isodate} = isodate($date);
+  $h{randomstring} = substr(Digest::SHA1::sha1_hex($date), 0, 16);
+
+  intern('blosxom', \%h);
+  return 1;
+}
+
+sub intern {
+  my ($package, $vars) = @_;
+  for my $name (keys %$vars) {
+    no strict 'refs', 'vars';
+    local *SYM = *{"$package\::$name"};
+    print F "  Interning $name = $vars->{$name} into '$package'\n";
+    $SYM = $vars->{$name};
+  }
+}
+
+sub isodate {
+    my ($unix_time) = @_;
+    return strftime("%FT%T", CORE::localtime($unix_time));
+}
+
+sub hash {
+  my ($h) = @_;
+  my @kvp = ();
+  for my $k (sort keys %$h) {
+    next if ref $h->{$k};
+    push @kvp, "$k: $h->{$k}";
+  }
+  return join "; " => @kvp;
+}
+
+
+# also do: randomstring
+1;
