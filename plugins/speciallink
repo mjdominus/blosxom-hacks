@@ -1,0 +1,31 @@
+# -*- cperl -*-
+
+package speciallink;
+use URI::Encode 'uri_encode';
+
+sub start { 1 }
+
+sub story {
+  my ($pkg, $arg) = @_;
+  my $body = $arg->{bodyref};
+
+  $$body =~ s{<wp>(.+?)</wp>}
+             {q[<a href="] . make_url('wp', $1) . qq[">$1</a>]}ges;
+}
+
+# type here will be used once we have more than one type.
+# But for now we only have one, "wp", which means "wikipedia"
+sub make_url {
+  my ($type, $name) = @_;
+  my $uri = qq{https://en.wikipedia.org/wiki/} . uri_encode($name);
+  $uri =~ tr/ /_/;
+  return $uri;
+}
+
+sub trim {
+  $_[0] =~ s/^\s+//;
+  $_[0] =~ s/\s+$//;
+  return $_[0];
+}
+
+1;
