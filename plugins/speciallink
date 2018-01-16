@@ -17,8 +17,9 @@ sub story {
 # But for now we only have one, "wp", which means "wikipedia"
 sub make_url {
   my ($type, $name) = @_;
+  $name =~ s/\s/ /g;
+  $name =~ tr/ /_/s;
   my $uri = qq{https://en.wikipedia.org/wiki/} . uri_encode($name);
-  $uri =~ tr/ /_/;
   return $uri;
 }
 
