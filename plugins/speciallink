@@ -2,15 +2,20 @@
 
 package speciallink;
 use URI::Encode 'uri_encode';
+use strict;
 
 sub start { 1 }
+
+my %replace = ( wp => sub { q[<a href="] . make_url('wp', $_) . qq[">$_</a>] },
+	      );
 
 sub story {
   my ($pkg, $arg) = @_;
   my $body = $arg->{bodyref};
+  my $pat = join "|", keys(%replace);
 
-  $$body =~ s{<wp>(.+?)</wp>}
-             {q[<a href="] . make_url('wp', $1) . qq[">$1</a>]}ges;
+  $$body =~ s{<($pat)>(.+?)</\1>}
+             { local $_ = $2; $replace{$1}->($1, $2) }gex;
 }
 
 # type here will be used once we have more than one type.
