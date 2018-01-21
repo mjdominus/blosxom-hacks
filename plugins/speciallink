@@ -7,6 +7,7 @@ use strict;
 sub start { 1 }
 
 my %replace = ( wp => sub { q[<a href="] . make_url('wp', $_) . qq[">$_</a>] },
+		center_image => \&center_image,
 	      );
 
 sub story {
@@ -32,6 +33,18 @@ sub trim {
   $_[0] =~ s/^\s+//;
   $_[0] =~ s/\s+$//;
   return $_[0];
+}
+
+sub center_image {
+  my ($tag, $file) = @_;
+  my $thumbnail = thumbnail($file);
+  qq{\n\n<p align=center><a href="BLOGIMGREF/$file"><img border=0 src="BLOGIMGREF/$thumbnail"></a></p>\n};
+}
+
+sub thumbnail {
+  my ($file) = @_;
+  my ($main, $suf) = ($file =~ /([^.]*)(\.(.*))?$/);
+  return "$main-th$suf";
 }
 
 1;
