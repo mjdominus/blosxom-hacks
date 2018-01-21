@@ -160,7 +160,10 @@ sub fetch_tex {
 }
 
 sub story {
-  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+  my ($pkg, $arg) = @_;
+  my ($path, $filename, $story_ref, $title_ref, $body_ref, $base) =
+    @{$arg}{qw/category filename storyref titleref bodyref
+	       catpath datepath metadata/};
 
   print D "story args: @_\n";
 

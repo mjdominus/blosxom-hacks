@@ -105,8 +105,10 @@ sub has {
 }
 
 sub story {
-  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $fullpath)
-    = @_;
+  my ($pkg, $arg) = @_;
+  my ($path, $filename, $story_ref, $title_ref, $body_ref, $fullpath)
+    = @{$arg}{qw/category filename storyref titleref bodyref
+		 catpath datepath metadata/};
   my $BAD;
 
   print $f "meta plugin processing <$path/$filename>\n";

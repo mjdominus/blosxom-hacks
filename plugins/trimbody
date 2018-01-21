@@ -5,7 +5,7 @@ my $TRIM = 400;
 sub start { 1 }
 
 sub story {
-  my $s = ${$_[5]};
+  my $s = ${$_[1]{bodyref}};
   $tb::trimstory = trim($s);
 }
 

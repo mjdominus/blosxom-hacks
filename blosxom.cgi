@@ -351,7 +351,26 @@ sub generate {
       # Plugins: Story
       foreach my $plugin ( @plugins ) { 
 	  if ($plugins{$plugin} > 0 and $plugin->can('story')) {
-	      $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath, $blosxom::metadata_hash{"$path/$fn"})
+	      my $complete_path = "$datadir$path/$fn.$file_extension";
+	      my %args = (
+		  category   => $path, # directory of this story
+		  filename   => $fn,   # filename of story, without suffix
+		  storyref   => \$story,
+		  titleref   => \$title,
+		  bodyref    => \$body,
+
+		  # If generating a section index, catpath
+		  # names the section; if a date index, datepath
+		  # is the date part. For the main page, neither.
+		  catpath    => $currentdir,
+		  datepath   => $datepath,
+
+		  metadata   => $blosxom::metadata_hash{"$path/$fn"},
+		  complete_path => $complete_path,
+		  published_time => $files{$complete_path},
+		  );
+	      $entries = $plugin->story(\%args);
+#	      $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath, $blosxom::metadata_hash{"$path/$fn"})
 	  }
       }
 
