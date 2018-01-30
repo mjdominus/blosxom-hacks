@@ -21,6 +21,7 @@ sub story {
   ($h{fn_trimmed} = $filename) =~ s/-\d+\z//;
   $h{isodate} = isodate($date);
   $h{randomstring} = substr(Digest::SHA1::sha1_hex($date), 0, 16);
+  $h{usenetpath} = usenet_path($date);
 
   intern('blosxom', \%h);
   return 1;
@@ -50,6 +51,74 @@ sub hash {
   }
   return join "; " => @kvp;
 }
+
+my $net = {
+ am => [ "brain-in-a-vat", "twirlip"], 
+ asr33 => [ "uunet"], 
+ batcomputer => [ "twirlip", "uunet"], 
+ berserker => [ "brain-in-a-vat", "forbin", "mechanical-turk", "neuromancer", "prime-radiant", "skordokott", "wescac"], 
+ "brain-in-a-vat" => [ "forbin", "hardees", "mechanical-turk", "ultron", "wintermute"], 
+ "central-scrutinizer" => [ "extro", "thermostellar-bomb-20", "twirlip", "walldrug", "warthog"], 
+ colossus => [ "triffid", "warthog"], 
+ computer => [ "prime-radiant"], 
+ epicac => [ "walldrug"], 
+ extro => [ "glados", "gormenghast"], 
+ forbin => [ "extro"], 
+ fpuzhpx => [ "central-scrutinizer", "grey-area", "qwerty"], 
+ glados => [ "asr33", "computer", "twirlip", "wintermute"], 
+ goatrectum => [ "epicac", "extro", "mechanical-turk", "warthog"], 
+ gormenghast => [ "asr33", "triffid", "ultron", "warthog", "wintermute"], 
+ "grey-area" => [ "computer", "ihnp4", "kremvax", "triffid", "ultron", "uunet", "wescac"], 
+ hal9000 => [ "computer", "gormenghast", "ihnp4", "kremvax"], 
+ hardees => [ "asr33", "wikipedia", "wintermute"], 
+ ihnp4 => [ "computer", "epicac", "ultron"], 
+ kremvax => [ "asr33", "colossus", "walldrug"], 
+ m5 => [ "hardees", "skynet"], 
+ "mechanical-turk" => [ "skordokott", "the-matrix", "triffid", "warthog", "wintermute"], 
+ mjd => [ "shitpost" ],
+ neuromancer => [ "colossus", "glados", "nosehair", "scattered-needles", "ultron", "wikipedia"], 
+ nosehair => [ "computer", "epicac"],
+ plover => [ "plovergw"], 
+ plovergw => [ "hal9000", "m5", "batcomputer", "am", "goatrectum", "fpuzhpx", "berserker"], 
+ ploverhub => [ "plovergw"], 
+ plovervax => [ "plovergw"], 
+ "prime-radiant" => [ "walldrug"], 
+ qwerty => [ "epicac", "gormenghast"], 
+ "scattered-needles" => [ "mechanical-turk", "ultron"], 
+ shitpost => [ "ploverhub", "plover", "plovervax", "plovergw", "plovergw", "plovergw", "plovergw", "plovergw", ], 
+ skordokott => [ "prime-radiant", "thermostellar-bomb-20"], 
+ skynet => [ "asr33", "mechanical-turk", "wescac"], 
+ "the-matrix" => [ "glados", "ultron", "xyzzy"], 
+ "thermostellar-bomb-20" => [ "epicac"], 
+ triffid => [ "hardees"], 
+ twirlip => [ "thermostellar-bomb-20", "wikipedia"], 
+ ultron => [ "your-host"], 
+ uunet => [ "prime-radiant", "ultron", "wikipedia", "wintermute"], 
+ walldrug => [ "your-host"], 
+ warthog => [ "your-host"], 
+ wescac => [ "twirlip"], 
+ wikipedia => [ "wintermute"], 
+ wintermute => [ "your-host"], 
+ xyzzy => [ "thermostellar-bomb-20", "ultron", "wintermute"], 
+ "you" => [ ], 
+ "your-host" => [ "you"], 
+};
+
+sub usenet_path {
+  srand(shift());
+  my $cur = "mjd";
+
+  my @path = $cur;
+  while ($cur) {
+    my @next = @{$net->{$cur}};
+    last unless @next;
+    my $node = $cur = $next[rand @next];
+    push @path, $node;
+  }
+
+  return join "!", reverse @path;
+}
+
 
 
 # also do: randomstring
