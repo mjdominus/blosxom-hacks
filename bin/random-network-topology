@@ -1,0 +1,150 @@
+#!/usr/bin/perl
+#
+# Given a list of hostnames (in <DATA>)
+# generate a random network topology
+# for use in plugins/02extravars/usenet_path
+
+my $density = 0.1;
+chomp (my @nodes = <DATA>);
+
+# Plan:
+# 1. Add edges at random with probability $density
+#    but make sure there are no cycles
+# 2. Find sinks, connect them to your-host
+# 3. Find sources, connect plovergw to them
+# 4. add in plover, ploverhub, plovervax, shitpost
+#
+# print out data structure
+
+my $n = { map { $_ => [] } @nodes };
+
+for my $i (0 .. $#nodes) {
+  for my $j (0 .. $#nodes) {
+    next if $i == $j;
+    next if rand() > $density;
+    my $new = add_edge($n, @nodes[$i, $j]);
+    if (acyclic($new, $nodes[$i])) {
+      $n = $new;
+    }
+  }
+}
+
+my (%indegree);
+my @sinks;
+for my $node (keys %$n) {
+  my $targets = $n->{$node};
+  if (@$targets == 0) {         # outdegree=0; sink
+    push @sinks, $node;
+  }
+  for my $target (@$targets) {
+    $indegree{$target}++;
+  }
+}
+my @sources = grep { $indegree{$_} == 0 } keys %$n;
+
+$n->{plovergw} = \@sources;
+for my $sink (@sinks) {
+  push @{$n->{$sink}}, "your-host";
+}
+$n->{"your-host"} = [ "your-brain" ];
+$n->{"your-brain"} = [];
+
+my @plovers = qw/ploverhub plover plovervax/;
+$n->{shitpost} = \@plovers;
+$n->{$_} = ['plovergw'] for @plovers;
+
+print_net($n);
+
+################################################################
+
+
+sub add_edge {
+  my ($n, $s, $t) = @_;
+  my $new = { %$n };
+  $new->{$s} = [ @{$n->{$s}}, $t ];
+  return $new;
+}
+
+sub acyclic {
+  my ($n, $start) = @_;
+  my @q = ($start);
+  my %seen;
+  while (@q) {
+    my $cur = shift @q;
+    return 0 if $seen{$cur}++ ; # found cycle
+    unshift @q, @{$n->{$cur}};
+  }
+  return 1;
+}
+
+sub print_net {
+  my ($n) = @_;
+  my %nodename;
+  my $c = 1;
+  for my $k (sort keys %$n) {
+    ($nodename{$k} = $k) =~ tr/a-zA-Z0-9/_/c;
+  }
+
+  print qq<digraph "plovernet" {\n>;
+  for my $k (sort keys %$n) {
+    print qq{  $nodename{$k} [label="$k"]\n};
+    #    print "$k: [@{$n->{$k}}]\n";
+    for my $t (sort @{$n->{$k}}) {
+      print "    $nodename{$k} -> $nodename{$t}\n";
+    }
+    print "\n";
+  }
+  print qq<}\n>;
+
+  print qq<# \$net = {\n>;
+  for my $k (sort keys %$n) {
+    print "#  $nodename{$k} => [ ";
+    print join(", ", map qq|"$nodename{$_}"|, @{$n->{$k}});
+    print "], \n";
+  }
+  print "# };\n";
+
+}
+
+__DATA__
+am
+asr33
+batcomputer
+berserker
+brain-in-a-vat
+central-scrutinizer
+colossus
+computer
+epicac
+extro
+forbin
+fpuzhpx
+glados
+goatrectum
+gormenghast
+grey-area
+hal9000
+hardees
+ihnp4
+kremvax
+m5
+mechanical-turk
+neuromancer
+nosehair
+prime-radiant
+qwerty
+scattered-needles
+skordokott
+skynet
+the-matrix
+thermostellar-bomb-20
+triffid
+twirlip
+ultron
+uunet
+walldrug
+warthog
+wescac
+wikipedia
+wintermute
+xyzzy
