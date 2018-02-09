@@ -7,8 +7,12 @@ use HTML::TreeBuilder;
 my $blogimg;
 my $first_image_url;
 
+
 sub start {
-  open F, ">", "/tmp/path.$>";
+  return unless $blosxom::flavour eq "html";
+  open F, ">", "/tmp/path.$>" or die ":F: $!";
+  { my $ofh = select F; $|=1; select $ofh }
+  print F scalar(localtime()), " flavour=$blosxom::flavour\n";
   $blogimg = $blosxom::testmode
         ? $testmode_image_url
         : $production_image_url;
@@ -20,63 +24,89 @@ sub last {
   undef $first_image_url;
 }
 
+# key "FOO" is a function which will generate the expansion of
+# urls that look like FOOREF/path and FOOLINK/path
+# Argument $_[0] is the path, without the leading slash.
+#   This argument is also in $_ for convenience
+# Argument $_[1] is the abbreviation that is being expanded (FOO or whatever)
+# Argument $_[2] is the complete $args structure passed to story().
+my %translate =
+  (
+   "CATCHALL" => sub { "/???$_[1]???/$_[0]" },
+
+   # link back to the current blog
+   "BLOG" => sub { "$blosxom::url/$_" },
+
+   # link to the images for this article
+   "BLOGIMG" => sub {
+     my ($file, undef, $arg) = @_;
+     m#/# ? "$blogimg/$_" : "$blogimg$arg->{category}/$arg->{filename}/$file"
+   },
+
+   # Universe of Discourse
+   "U" => sub { "https://blog.plover.com/$_" },
+
+   # Content-Type: text/shitpost
+   "SP" => sub { "https://shitpost.plover.com/$_" },
+
+   # English Wikipedia
+   "WP" => sub {
+     tr/ /_/;
+     s/([^a-zA-Z0-9_])/sprintf("%%%02x", ord($1))/ge;
+     "https://en.wikipedia.org/wiki/$_"
+   },
+  );
+
 sub story {
   my ($pkg, $arg) = @_;
   my ($path, $filename, $story_ref, $title_ref, $body_ref, $base)
     = @{$arg}{qw/category filename storyref titleref bodyref
 		 catpath datepath metadata/};
 
-  return unless $$body_ref =~ /\bBLOG(?:IMG)?(?:LINK|REF)\b/;
-
   print F "*** $path $filename\n";
+  return unless $$body_ref =~ /\b([A-Z]*)(?:LINK|REF)\b/;
+  print F "    checking content\n";
 
   my $TB = HTML::TreeBuilder->new();
   my $html = $TB->parse($$body_ref)->eof->elementify();
   my $changed;
 
   my @changes;
-  for my $link ($html->look_down(_tag => 'a')) {
-    my $url = $link->attr('href');
+  for my $link ($html->look_down(_tag => qr/\A (img|a) \z/x)) {
+    my $attr = $link->tag eq "a" ? 'href' : 'src';
+    my $url = $link->attr($attr);
 
-    if ($url =~ m{^BLOG(?:LINK|REF)/(.*)}) {
-      push @changes, [qq{href="$url"}, qq{href="$blosxom::url/$1"}];
-    } elsif ($url =~ m{^BLOGIMG(?:LINK|REF)/(.*)}) {
-      my $file = $1;
-      if ($file =~ m{/}) {
-        push @changes, [qq{href="$url"}, qq{href="$blogimg/$file"}];
-      } else {
-        push @changes, [qq{href="$url"}, qq{href="$blogimg$path/$filename/$file"}];
+    if ($url =~ m{^([A-Z]*)(?:LINK|REF)/(.*)}) {
+      my ($where, $what) = ($1, $2);
+      my $translate = $translate{$1};
+      unless ($translate) {
+	print F "  ! WARNING: no translator defined for '$1'; using catchall\n";
+	$translate = $translate{"CATCHALL"};
       }
+      print F "    <$url>\n      where=$where\n      what= $what\n";
+      local $_ = $2;
+      my $replacement = $translate->($2, $1, $arg);
+      print F "    Will change it to <$replacement>\n";
+      push @changes, [ qq{$attr="$url"}, join("", qq{$attr="$replacement"}) ];
     }
   }
 
-  for my $link ($html->look_down(_tag => 'img')) {
-    my $url = $link->attr('src');
-    if ($url =~ m{^BLOGIMG(?:LINK|REF)/(.*)}) {
-      my $file = $1;
-      if ($file =~ m{/}) {
-        push @changes, [qq{src="$url"}, qq{src="$blogimg/$file"}];
-      } else {
-        push @changes, [qq{src="$url"}, qq{src="$blogimg$path/$filename/$file"}];
-      }
-    }
-  }
-
+  print F "    ----\n" if @changes;
   for my $change (@changes) {
     my ($from, $to) = @$change;
-    print F "Replacing [[$from]] with [[$to]]\n";
+    print F "    Replacing <$from>\n         with <$to>\n";
     if (! defined $first_image_url && $from =~ /src=/) {
-      print F "Trying to set first image; to=$to\n";
+      print F "      Trying to set first image; to=$to\n";
       ($first_image_url) = ($to =~ /src="(.*)"/);
-      print F "first_image_url set to $first_image_url\n"
+      print F "      first_image_url set to $first_image_url\n"
     }
     my $pos = index($$body_ref, $from);
     if ($pos < 0) {
-      print F "!!! Couldn't find target!\n";
+      print F "      !!! Couldn't find target!\n";
       next;
     }
     substr($$body_ref, $pos, length($from), $to);
-    print F "  Replaced at position $pos\n";
+    print F "         ...replaced at position $pos\n";
   }
 
   return 1;
