@@ -22,6 +22,7 @@ sub story {
   $h{isodate} = isodate($date);
   $h{randomstring} = substr(Digest::SHA1::sha1_hex($date), 0, 16);
   $h{usenetpath} = usenet_path($date);
+  $h{newsgroup} = join "." => newsgroup_namespace($date), $h{fn_trimmed};
 
   intern('blosxom', \%h);
   return 1;
@@ -119,7 +120,29 @@ sub usenet_path {
   return join "!", reverse @path;
 }
 
-
+my @namespace = qw(talk.mjd 8 alt.mjd 2 alt.sex 4
+		   alt.binaries 4
+		   alt.binaries.pictures 4
+		   alt.binaries.pictures.erotica 2
+		   comp.protocols.tcp-ip 1 rec.pets 1
+		   rec.pets 1 comp.lang.haskell 2
+		   talk.bizarre 2 rec.food 3 rec.food.cooking 3
+		   news.groups 1 misc 4 misc.test 1 misc.misc 2
+		   misc.jobs 1 sci.math 4
+		   );
+sub newsgroup_namespace {
+  my ($date) = @_;
+  my $total = 0;
+  for (my $i = 1; $i < @namespace; $i += 2) { $total += $namespace[$i] }
+  my $r = rand($total);
+  for (my $i = 0; $i < @namespace; $i += 2) {
+    $r -= $namespace[$i+1];
+    if ($r < 0) {
+      return $namespace[$i];
+    }
+  }
+  return $namespace[0];		# should never happen
+}
 
 # also do: randomstring
 1;
