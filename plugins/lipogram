@@ -1,0 +1,47 @@
+
+package lipogram;
+
+#
+# If the first post on the page has a title that mentions lipograms,
+# change the blog title etc. to lipogrammatic versions
+#
+
+sub start {
+  open F, ">", "/tmp/lipogram.$>"
+}
+
+my $page_has_lipogram;
+sub head {
+#    $page_has_lipogram = 0;
+}
+
+sub story {
+  my ($pkg, $arg) = @_;
+  my $title_ref = $arg->{titleref};
+  print F "$arg->{filename}: $$title_ref\n";
+  $story_count += 1;
+  if ($story_count == 1 && $$title_ref =~ /lipogram/i) {
+    $page_begins_with_lipogram = 1;
+  }
+}
+
+sub foot {
+  print F "  foot: page has lipogram?  $page_has_lipogram\n";
+  print F "  page title: $blosxom::page_title\n";
+  print F "  flavour: $blosxom::flavour\n";
+  print F "  story count: $story_count\n";
+  if ($blosxom::flavour eq "html" && $page_begins_with_lipogram) {
+    print F "  doing substitutions\n";
+    $blosxom::output =~ s/$blosxom::blog_title/A World of Discussions/g;
+    $blosxom::output =~ s/Other articles in category/Additional posts on topic/g;
+    $blosxom::output =~ s/permanent link/immortal link/g;
+    $blosxom::output =~ s/Comments disabled/Backtalk plugin shut off/g;
+    $blosxom::output =~ s/recent entries/additional posts/g;
+    $blosxom::output =~ s/Archive/Historical backlog/g;
+    $blosxom::output =~ s/archive/history/g;
+  }
+  $story_count = 0;
+  $page_begins_with_lipogram = 0;
+}
+
+1;
