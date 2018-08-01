@@ -45,6 +45,8 @@ my %translate =
 
    # Universe of Discourse
    "U" => sub { "https://blog.plover.com/$_" },
+   "UD" => sub { "https://blog.plover.com/$_" },
+   "UOD" => sub { "https://blog.plover.com/$_" },
 
    # Content-Type: text/shitpost
    "SP" => sub { "https://shitpost.plover.com/$_" },
@@ -75,6 +77,7 @@ sub story {
   for my $link ($html->look_down(_tag => qr/\A (img|a) \z/x)) {
     my $attr = $link->tag eq "a" ? 'href' : 'src';
     my $url = $link->attr($attr);
+#    print F "    found link attr '$attr' with url '$url'\n";
 
     if ($url =~ m{^([A-Z]*)(?:LINK|REF)/(.*)}) {
       my ($where, $what) = ($1, $2);
