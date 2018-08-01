@@ -149,7 +149,7 @@ sub imglink {
   $blosxom::testmode ?
     qq{<img $alt border=0 src="http://plover.com/~mjd/pictures/blog/tex/$file">}
   :
-    qq{<img $alt border=0 src="http://pic.blog.plover.com/tex/$file">};
+    qq{<img $alt border=0 src="https://pic.blog.plover.com/tex/$file">};
 }
 
 sub fetch_tex {
