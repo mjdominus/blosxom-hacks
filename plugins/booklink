@@ -43,7 +43,7 @@ sub start {
 	   $result = qq{http://covers.openlibrary.org/b/isbn/$isbn-M.jpg};
 
 	   my $lt_dev_key = "4e7443e59f586e9306d61bb521a11d8e";
-	   $result = qq{http://covers.librarything.com/devkey/$lt_dev_key/medium/isbn/$isbn};
+	   $result = qq{https://covers.librarything.com/devkey/$lt_dev_key/medium/isbn/$isbn};
 	 }
 
 #        $result = qq{http://images.amazon.com/images/P/$isbn.01.20TRZZZZ.jpg};
