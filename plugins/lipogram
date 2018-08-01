@@ -32,7 +32,8 @@ sub foot {
   print F "  story count: $story_count\n";
   if ($blosxom::flavour eq "html" && $page_begins_with_lipogram) {
     print F "  doing substitutions\n";
-    $blosxom::output =~ s/$blosxom::blog_title/A World of Discussions/g;
+    $blosxom::output =~ s/The Universe of Discourse/A World of Discussions/g;
+#    $blosxom::output =~ s/Content-type: text\/shitpost/Mark's Shitpostorium/g;
     $blosxom::output =~ s/Other articles in category/Additional posts on topic/g;
     $blosxom::output =~ s/permanent link/immortal link/g;
     $blosxom::output =~ s/Comments disabled/Backtalk plugin shut off/g;
@@ -45,3 +46,4 @@ sub foot {
 }
 
 1;
+
