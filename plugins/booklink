@@ -34,9 +34,13 @@ sub start {
 #        $result = qq{http://covers.powells.com/$isbn13.jpg};
 # This also works, but only for isbn13s:
 #        $result = qq{http://powells-covers-2.s3.amazonaws.com/$isbn.jpg};
+# Doesn't work, perhaps because of referer checking?
+#        $result = qq{https://https://images-us.bookshop.org/ingram/$isbn.jpg};
+# But this variation does work:
+#        $result = https://images-us.bookshop.org/ingram/$book{$tag}{ISBN}.jpg?height=250&v=v2
 
 	 if (length($isbn) == 13) {
-	   $result = qq{https://covers.powells.com/$isbn.jpg};
+           $result = qq{https://images-us.bookshop.org/ingram/$isbn.jpg?height=250&v=v2};
 	 } else {
 	   # This works as of 20170728, but OL often doesn't have
 	   # information for recent books
@@ -63,6 +67,7 @@ sub start {
 
 
 # http://www.powells.com/partner/29575/biblio/1234567890
+# https://bookshop.org/a/93187/{ISBN13}
 sub story {
   my ($pkg, $arg) = @_;
   my ($path, $filename, $story_ref, $title_ref, $body_ref) =
@@ -70,18 +75,25 @@ sub story {
 	       catpath datepath metadata/};
 
   $$body_ref =~ s{<book>([\w ]+)</book>}
-                 {<div class="bookbox"><table align=right width="14%" bgcolor="#ffffdd" border=1><tr><td align=center>
-<A HREF="http://www.powells.com/partner/29575/biblio/$book{$1}{ISBN}"><font size="-2">Order</font><br>
-<cite><font>$book{$1}{TITLE}</font></cite><br>
-$book{$1}{IMGELT}<br>
-<font size="-2">from Powell's</font></a>
-</td></tr></table></div>}g;
-
+                 {bookbox($1)}eg;
 #  $$body_ref =~ s{booklink is disabled}
 #                 {booklink is enabled}gi;
-
   return 1;
 }
+
+sub bookbox {
+    my ($tag) = @_;
+
+    return  qq{<div class="bookbox"><table align=right width="20%" bgcolor="#ffffdd"
+    border=1><tr><td align=center><A HREF="https://bookshop.org/a/93187/$book{$tag}{ISBN}"><font
+    size="-2">Buy</font><br><cite><font>$book{$tag}{TITLE}</font></cite><br>$book{$tag}{IMGELT}<br>
+    <font size="-2">from Bookshop.org<br>(with kickback)</a><br><a href="https://bookshop.org/a/00000/$book{$tag}{ISBN}">(without kickback)</a></font></a>
+    </td></tr></table></div>};
+}
+
+
+
+# https://images-us.bookshop.org/ingram/9780060935467.jpg?height=250&v=v2
 
 # Barnes and Noble old book links
 #
