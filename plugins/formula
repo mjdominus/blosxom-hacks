@@ -2,6 +2,7 @@
 
 package formula;
 
+use Digest::SHA 'sha1_base64';
 my $formula = "/home/mjd/misc/blog/bin/formula";
 my $target = "/home/mjd/public_html/pictures/blog/tex";
 my $texlogfile = "/tmp/formula2-$<.err";
@@ -32,6 +33,7 @@ sub formula {
 
   } elsif ($formula_provider eq "mathjax") {
     if ($tex !~ /(?<!\\)(?:\\\\)*\$/) {
+#      $tex = "<div class='mathjax-formula'>\n\$\$$tex\$\$\n</div>\n"; # Add $$...$$ if there are no dollar signs at all
       $tex = "\$\$$tex\$\$"; # Add $$...$$ if there are no dollar signs at all
       print D "Added \$\$...\$\$\n";
       # Mathjax will take it from there
@@ -71,13 +73,15 @@ sub formula {
 sub local_tex {
   my ($tex, $file, $lastmod) = @_;
 
+  $file ||= "formula_" . sha1_base64($tex);
+  $file =~ tr#/#_#;
+  $file .= ".gif" unless $file =~ /\.gif$/;
+
   # Add $$...$$ unless something like it is there already
   $tex = "\$\$$tex\$\$"  unless $tex =~ /(?<!\\)(?:\\\\)*\$/;
 
   print D "-----\nFormula for file '$file':\n\t$tex\n\n";
   print D ".blog file last mod " . localtime($lastmod) . "\n";
-  $file ||= "formula_" . $SEQUENCE++;
-  $file .= ".gif" unless $file =~ /\.gif$/;
 
   return imglink(file => $file, tex => $tex) unless $blosxom::flavour eq "html";
 
@@ -161,13 +165,13 @@ sub fetch_tex {
 
 sub story {
   my ($pkg, $arg) = @_;
-  my ($path, $filename, $story_ref, $title_ref, $body_ref, $base) =
+  my ($path, $filename, $story_ref, $title_ref, $body_ref, $file) =
     @{$arg}{qw/category filename storyref titleref bodyref
-	       catpath datepath metadata/};
+	       complete_path/};
 
-  print D "story args: @_\n";
+  print D "story args:\n\t", join ", " => map "$_: $arg->{$_}" => keys %$arg;
+  print D "\n";
 
-  my $file = join "/", $blosxom::datadir, $base;
   my $lastmod = (stat $file)[9];
   print D ".blog file ($file) last mod " . localtime($lastmod) . "\n";
 
@@ -175,15 +179,16 @@ sub story {
     meta::get("$path/$filename", "formulas.$blosxom::flavour") ||
     meta::get("$path/$filename", "formulas")                   ||
     ($blosxom::flavour eq "html" ? "mathjax" : "google-charts");
+#    ($blosxom::flavour eq "html" ? "local-tex" : "local-tex");
 
   # DEBUG
-  $$body_ref = qq{<font  color="darkblue">formula provider: $formula_provider</font><p>\n\n $$body_ref}
-        if $blosxom::testmode;
+  #  $$body_ref = qq{<font  color="darkblue">formula provider: $formula_provider</font><p>\n\n $$body_ref}
+  #        if $blosxom::testmode;
 
   if ($formula_provider ne 'mathjax') {
     $$body_ref =~
       s{!!(.*?)!!}
-       {formula(tex => "\$$1\$", provider => $formula_provider)}egxs;
+       {formula(tex => "\$$1\$", provider => $formula_provider, lastmod => $lastmod)}egxs;
   }
 
   $$body_ref =~

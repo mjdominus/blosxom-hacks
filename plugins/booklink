@@ -58,7 +58,8 @@ sub start {
 
     my $data = {ISBN => $isbn, TITLE => $title, IMGURL => $imgurl, };
 #    $data->{IMGELT} = $imgnum eq "-" ? "" : qq{<IMG SRC="$data->{IMGURL}" BORDER="0" ALIGN="center" ALT="$data->{TITLE}"  >};
-     $data->{IMGELT} = qq{<IMG SRC="$data->{IMGURL}" BORDER="0" ALIGN="center" ALT="$data->{TITLE} $data->{IMGURL}"  >};
+     $data->{IMGELT} = qq{<IMG SRC="$data->{IMGURL}" BORDER="0"
+     ALIGN="center" ALT="($data->{TITLE} cover missing)"  >};
 
     $book{$isbn} = $book{$tag} = $data;
   }

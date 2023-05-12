@@ -1,11 +1,12 @@
 Autobiog	0760768617	Franklin's Autobiography	9101737
 Brainstorms	0262540371	Brainstorms	1163594
 CLTL2	1555580416	Common Lisp: The Language	3851403
-Chuzzlewit	0192834614	Martin Chuzzlewit	1135442
+#Chuzzlewit	0192834614	Martin Chuzzlewit	1135442
+Chuzzlewit	9780199554003	Martin Chuzzlewit	1135442
 Concrete Math	0201558025	Concrete Mathematics	1148403
 DDI	068482471X	Darwin's Dangerous Idea	-
 Frege	0631194452	The Frege Reader	-
-HOP	1558607013	Higher-Order Perl	COVER.jpg
+HOP	9781558607019	Higher-Order Perl	COVER.jpg
 Hakluyt	0140430733	Voyages and Discoveries: Selections from Hakluyt's Principal Navigations	1126997
 Ingenious Franklin	0812210670	Ingenious Dr. Franklin	977000
 IslamMath	0387406050	Episodes in the Mathematics of Medieval Islam	7312239
@@ -14,11 +15,15 @@ McGee	0684800012	On Food and Cooking	9984318
 Perl Debugged	0201700549	Perl Debugged	3942025
 Perl Medic	0201795264	Perl Medic	7254439
 PrincMath	0521626064	Principia Mathematica (through section 56)	-
-VoyDD	0486434915	The Voyages of Doctor Dolittle	7969205
+#VoyDD	0486434915	The Voyages of Doctor Dolittle	7969205
 VoyDDBowd	0440400023	The Voyages of Doctor Dolittle (Bowdlerized)	9920128
-Mirza	0195666046	Travels of Mirza Abu Taleb Khan	9226499
-KonTiki	0671726528	Kon-Tiki: Across the Pacific by Raft	4360360
-Mecca1	0486212173	Personal Narrative of a Pilgrimage to Al Madinah and Meccah, Vol. 1	1275707
+VoyDD	9781645940197	The Voyages of Doctor Dolittle	7969205
+#Mirza	0195666046	Travels of Mirza Abu Taleb Khan	9226499
+Mirza	9781551116723	Travels of Mirza Abu Taleb Khan	9226499
+#KonTiki	0671726528	Kon-Tiki: Across the Pacific by Raft	4360360
+KonTiki	9781447411413	Kon-Tiki: Across the Pacific by Raft	4360360
+#Mecca1	0486212173	Personal Narrative of a Pilgrimage to Al Madinah and Meccah, Vol. 1	1275707
+Mecca1	9781666769357	Personal Narrative of a Pilgrimage to Al Madinah and Meccah, Vol. 1	1275707
 Math Apology	 0521427061	A Mathematician's Apology	-
 Ramanujan	0821820230	Ramanujan: Twelve Lectures on Subjects Suggested by His Life and Work	-
 Moon Digit	1932080295	A Digit of the Moon	8731833
@@ -26,17 +31,18 @@ AdvUnix	 0131411543	Advanced Unix Programming	-
 KnuthFasc4	0321335708	The Art of Computer Programming: Fascicle 4	10702670
 Pure Math	0521092272	Pure Mathematics	-
 Pepys	0812970713	The Diary of Samuel Pepys	6738163
-Blue Highways	0316353299	Blue Highways	10329282
+#Blue Highways	0316353299	Blue Highways	10329282
+Blue Highways	9780316353298	Blue Highways	10329282
 Wilkins Mercury	0766169707	Mercury, or, The Swift and Secret Messenger	-
 Wilkins Various	0714616184	Mathematical and Philosophical Works of John Wilkins	-
 Wilkins Language	1855069415	An Essay Towards a Real Character and a Philosophical Language	-
 Graphical Evolution	 0471815772	Graphical Evolution	1270863
 Gulliver	1593080573	Gulliver's Travels	8432539
+Gulliver	9780199536849	Gulliver's Travels	8432539
 Sampson	0804717567	Writing Systems	1500029
 Pencil	0679734155	The Pencil	-
 Communist Manifesto	0451527100	The Communist Manifesto	1259947
 Ball Four	0020306652	Ball Four	5141204
-Joking	 0553346687	Surely You're Joking, Mr. Feynman	-
 Light and Color	0387979352	Light and Color in the Outdoors	8591153
 Cyberiad	0156027593	The Cyberiad	8487895
 C Explained	0316180661	Consciousness Explained	10328890
@@ -47,10 +53,11 @@ Kelley Topology	0387901256	General Topology	10655884
 Quine Math Logic	0674554515	Mathematical Logic	1352466
 Wolf	1565923987	Mastering Algorithms with perl	10257183
 Britannica Treasury	0670835684	The Treasury of the Encyclop&aelig;dia Britannica	1340549
-Baroque1	0060593083	Quicksilver	10314186
-Baroque2	0060733357	The Confusion	9722714
-Baroque3	0060750863	The System of the World	10020560
-Rainbows End	0312856849	Rainbows End	10350313
+#Baroque1	0060593083	Quicksilver	10314186
+#Baroque2	0060733357	The Confusion	9722714
+#Baroque3	0060750863	The System of the World	10020560
+#Rainbows End	0312856849	Rainbows End	10350313
+Rainbows End	9781250841506	Rainbows End	10350313
 Leviathan	0760755930	Leviathan	12408782
 Lions	1573980137	Lions' Commentary on Unix 6th Edition	9720466
 KR	0131103628	The C Programming Language	10689693
@@ -72,9 +79,12 @@ Quine Math Logic        0674554515      Mathematical Logic
 1352466
 Wolf    1565923987      Mastering Algorithms with perl  10257183
 Britannica Treasury     0670835684      The Treasury of the Encyclop&aelig;dia Britannica	1340549
-Baroque1        0060593083      Quicksilver     10314186
-Baroque2        0060733357      The Confusion   9722714
-Baroque3        0060750863      The System of the World 10020560
+#Baroque1        0060593083      Quicksilver     10314186
+#Baroque2        0060733357      The Confusion   9722714
+#Baroque3        0060750863      The System of the World 10020560
+Baroque1	9780060593087	Quicksilver	10314186
+Baroque2	-	The Confusion	9722714
+Baroque3	9780060750862	The System of the World	10020560
 Rainbows End    0312856849      Rainbows End    10350313
 Leviathan       0760755930      Leviathan       12408782
 Lions   1573980137      Lions' Commentary on Unix 6th Edition	9720466
@@ -83,20 +93,26 @@ Priest  0199263302      In Contradiction        11107134
 Holdouts        0486294250      New York's Architectural Holdouts 1280549
 VCA     0198534469      Visual Complex Analysis 8883968
 Little Brain	0142400647	Me and My Little Brain	8383567
-Bargain for Frances	006444001X	A Bargain for Frances	7253721
-Golden Compass	0440418321	The Golden Compass	9850507
+# Bargain for Frances	006444001X	A Bargain for Frances	7253721
+Bargain for Frances	9780064440011	A Bargain for Frances	7253721
+# Golden Compass	0440418321	The Golden Compass	9850507
+Golden Compass	9780440238133	The Golden Compass	9850507
 KnuthII	0201896842	The Art of Computer Programming: Volume 2, Seminumerical Algorithms	10702158
 Armada	0618565914	The Defeat of the Spanish Armada	-
 Ducklings	0670451495	Make Way for Ducklings	-
 GeoPlay	0866513515	Geometric Playthings	-
-Tootle	0307020970	Tootle	13820367	-
+# Tootle	0307020970	Tootle	13820367	-
+Tootle	9780307020970	Tootle	13820367	-
 WITNOTB	0671628321	What is the Name of this Book?	1435926927
 SICP	0262011532	Structure and Interpretation of Computer Programs	15031027
 Polya	0691119663	How to Solve It	14620504
-Claudius	0679724773	I, Claudius	13781128
-King Jesus	0374516642	King Jesus	19742839
+#Claudius	0679724773	I, Claudius	13781128
+Claudius	9780848805111	I, Claudius	13781128
+# King Jesus	0374516642	King Jesus	19742839
+King Jesus	9780374516642	King Jesus	19742839
 Lyre of Orpheus	0140114335	The Lyre of Orpheus	-
-Manticore	0140043888	The Manticore	1124432
+# Manticore	0140043888	The Manticore	1124432
+Manticore	9780143039136	The Manticore
 Jaynes	 0618057078	The Origin of Consciousness in the Breakdown of the Bicameral Mind	14615694
 SSN	0844658032	Symbols, Signals, and Noise	-
 Chaos	0387946771	Chaos	27875260
@@ -120,3 +136,10 @@ Ninefox	9781781084496	Ninefox Gambit	COVERS.jpg
 Lakatos	9781107534056	Proofs and Refutations	-
 CrazyApe	9780806529301	The Crazy Ape	-
 NYC Etiquette	 9780062303110	NYC Basic Tips & Etiquette	-
+Poppy Seed Cakes	9780375712326	The Poppy Seed Cakes	COVERS.jpg
+All the Birds	9780765379955	All the Birds in the Sky	-
+Fern Fever	9780711230705 	Fern Fever: The Story of Pteridomania	-
+Mockingbird	9780060935467	To Kill a Mockingbird	-
+Cannery Row	9780140187373	Cannery Row	-
+Physical Law	9780262560030	The Character of Physical Law	-
+Cuneiform	9781606064474	Cuneiform	-

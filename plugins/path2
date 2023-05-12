@@ -7,7 +7,6 @@ use HTML::TreeBuilder;
 my $blogimg;
 my $first_image_url;
 
-
 sub start {
   return unless $blosxom::flavour eq "html";
   open F, ">", "/tmp/path.$>" or die ":F: $!";
@@ -59,6 +58,8 @@ my %translate =
    },
   );
 
+my %attr = (a => "href", img => "src", source => "src", embed => "src");
+
 sub story {
   my ($pkg, $arg) = @_;
   my ($path, $filename, $story_ref, $title_ref, $body_ref, $base)
@@ -74,10 +75,13 @@ sub story {
   my $changed;
 
   my @changes;
-  for my $link ($html->look_down(_tag => qr/\A (img|a) \z/x)) {
-    my $attr = $link->tag eq "a" ? 'href' : 'src';
+  # HTML::TreeBuilder fails to include SOURCE elements in the parsed output!
+  # See https://rt.cpan.org/Ticket/Display.html?id=127503
+  for my $link ($html->look_down(_tag => qr/\A (img|a|embed|source|video) \z/xi)) {
+    print F "    examining element " . $link->tag . "\n";
+    my $attr = $attr{$link->tag} or next;
     my $url = $link->attr($attr);
-#    print F "    found link attr '$attr' with url '$url'\n";
+    print F "      found link attr '$attr' with url '$url'\n";
 
     if ($url =~ m{^([A-Z]*)(?:LINK|REF)/(.*)}) {
       my ($where, $what) = ($1, $2);

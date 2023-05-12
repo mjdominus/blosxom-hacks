@@ -52,7 +52,7 @@ sub foot {
    
     my $url = "$blosxom::url/$path";
     $title =~ s/\bpi\b/&pi;/g;
-    push @links,  qq{<tr><td bgcolor="#ccccff"><a href="$url">$title</a>};
+    push @links,  qq{<tr><td class="toc"><a href="$url">$title</a>};
   }
   $TOC = join "\n", @links;
 #  $TOC =~ s/\bpi\b/&pi;/g;
@@ -69,7 +69,7 @@ sub foot {
 
 sub titlecmp {
   my ($a, $b) = @_;
-  for ($a, $b) { s/^(the|a|an)\s+//i; tr/a-zA-Z0-9//cd; }
+  for ($a, $b) {  tr/a-zA-Z0-9//cd; s/^(the|a|an)\s+//i; }
   lc($a) cmp lc($b);
 }
 

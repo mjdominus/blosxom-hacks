@@ -20,21 +20,36 @@ sub story {
       $dir, $date, $meta)
     = @{$arg}{qw/category filename storyref titleref bodyref
 		 catpath datepath metadata/};
-  print F "--- STORY @_\n";
+  print F "--- STORY $path $filename ${$arg->{titleref}}\n";
   print F "  Flavour: $blosxom::flavour\n";
   print F "  Default input format: $blosxom::default_input_format\n";
-  unless (exists $meta->{formatter} && lc($meta->{formatter}) eq "markdown"
-          or $blosxom::default_input_format eq "markdown") {
-    print F "    Does not specify markdown formatter; quitting.\n";
-    return 1;
-  }
+  my $use_markdown = 0;
+  if ($blosxom::default_input_format eq "markdown") {
+      $use_markdown = 1;
+      print F "    Using markdown: Blog default format\n";
+  } elsif (exists $meta->{formatter} 
+	   && lc($meta->{formatter}) eq "markdown") {
 
+      $use_markdown = 1;
+      print F "    Using markdown: META section says so\n";
+  } elsif ($meta->{published} > 1559779200) { # 7 June 2019
+      $use_markdown = 1;
+      print F "    Using markdown: Article published after 2019-06-06\n";
+  } else {
+      print F "    Does not specify markdown formatter, and published $meta->{published}; quitting.\n";
+      return 1;
+  }
   require Text::Markdown;
-  
+
   if ($blosxom::flavour eq "html" || 1) {
     my $before = $$body_ref;
+    # If you find yourself wanting to change 'markdown' to 'Markdown'
+    # in the next line, it's because your good Text::Markdown has been
+    # replaced with John Gruber's ancient shitty version.  DO NOT BE
+    # TEMPTED to "fix" the capitalization! -- MJD 2018-10-06
     $$body_ref = Text::Markdown::markdown($$body_ref);
-print F "Converted:\n---------\n$before\n--------\nTO\n---------\n$$body_ref\n---------\n";
+print F
+    "Converted:\n---------\n$before\n--------\nTO\n---------\n$$body_ref\n---------\n";
   } else {
     print F "Don't know how to handle markdown for flavour $blosxom::flavour; skipping.\n";
   }

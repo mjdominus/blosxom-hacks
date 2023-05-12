@@ -8,14 +8,14 @@
 package blosxom;
 
 use lib '/home/mjd/src/blosxom';
-load_config();
-
+require 'blosxom-config.pl';
+blosxom_config::load_config();
 
 # --------------------------------
 
-use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %template $template $depth $num_entries $file_extension $default_flavour $static_or_dynamic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $entries $output $header $show_future_entries %files %indexes %others $page_title $default_input_format!;
+use vars qw! $version $blog_title $blog_description $blog_language $datadir $url %template $template $depth $num_entries $file_extension $default_flavour $static_or_dynamic $plugin_dir $plugin_state_dir @plugins %plugins $static_dir $static_password @static_flavours $static_entries $path_info $path_info_yr $path_info_mo $path_info_da $path_info_mo_num $flavour $static_or_dynamic %month2num @num2month $interpolate $entries $output $header $show_future_entries %files %indexes %others $page_title $default_input_format $default_templates $redirect_meta_header!;
 
-#open DIAGNOSIS, ">", "/tmp/warnstdout";
+open DIAGNOSIS, ">", "/tmp/warnstdout";
 #{ my $ofh = select DIAGNOSIS;
 #  $| = 1;
 #  select $ofh;
@@ -72,6 +72,16 @@ if ( $path_info[$#path_info] =~ /(.+)\.(.+)$/ ) {
 } else {
   $flavour = param('flav') || $default_flavour;
 }
+# Fix XSS in flavour name (CVE-2008-2236)
+# Copied from Blosxom 2.1.2, 2018-10-29 MJD.
+html_escape($flavour);
+sub html_escape {
+    my %esc = ('<' => "lt", '>' => "gt", '&' => "amp",
+	       q{'} => "apos", q{"} => "quot" );
+    for (@_) {
+	s/([<>&'"])/&$esc{$1};/g;
+    }
+}
 
 # Strip spurious slashes
 $path_info =~ s!(^/*)|(/*$)!!g;
@@ -93,11 +103,19 @@ $template =
   };
 # Bring in the templates
 %template = ();
-while (<DATA>) {
-  last if /^(__END__)?$/;
-  my($ct, $comp, $txt) = /^(\S+)\s(\S+)\s(.*)$/;
-  $txt =~ s/\\n/\n/mg;
-  $template{$ct}{$comp} = $txt;
+
+{ my ($TMPL);
+  unless (open $TMPL, "<", $default_templates) {
+      die "Couldn't open default template file '$default_templates': $!";
+  }
+
+  while (<$TMPL>) {
+      last if /^(__END__)?$/;
+      my($ct, $comp, $txt) = /^(\S+)\s(\S+)\s(.*)$/;
+      $txt =~ s/\\n/\n/mg;
+      $template{$ct}{$comp} = $txt;
+  }
+  close $TMPL;
 }
 
 # Plugins: Start
@@ -106,7 +124,7 @@ if ( $plugin_dir and opendir PLUGINS, $plugin_dir ) {
     my($plugin_name, $off) = $plugin =~ /^\d*(\w+?)(_?)$/;
     my $on_off = $off eq '_' ? -1 : 1;
     require "$plugin_dir/$plugin";
-    $plugin_name->start() and ( $plugins{$plugin_name} = $on_off ) and push @plugins, $plugin_name;
+    $plugin_name->start($plugin_name) and ( $plugins{$plugin_name} = $on_off ) and push @plugins, $plugin_name;
   }
   closedir PLUGINS;
 }
@@ -148,7 +166,7 @@ $entries =
         my $curr_depth = $File::Find::dir =~ tr[/][]; 
         return if $depth and $curr_depth > $depth; 
         return if $File::Find::dir =~ m{/CVS$};
-     
+
         if ( 
           # a match
           $File::Find::name =~ m!^$datadir/(?:(.*)/)?(.+)\.$file_extension$!
@@ -161,9 +179,10 @@ $entries =
               $show_future_entries
               or timeof($File::Find::name) < time 
             )
-
+             and print F "before $File::Find::name\n"
               # add the file and its associated mtime to the list of files
               and $files{$File::Find::name} = timeof($File::Find::name)
+             and print F "after\n"
 
                 # static rendering bits
                 and (
@@ -217,15 +236,16 @@ if (!$ENV{GATEWAY_INTERFACE} and param('-password') and $static_password and par
         my $content_type = (&$template($p,'content_type',$flavour));
         $content_type =~ s!\n.*!!s;
         my $fn = $p =~ m!^(.+)\.$file_extension$! ? $1 : "$p/index";
-        param('-quiet') or print "$fn.$flavour\n";
-        my $fh_w = new FileHandle "> $static_dir/$fn.$flavour" or die "Couldn't open $static_dir/$p for writing: $!";  
-        $output = '';
-        print $fh_w 
-          $indexes{$path} == 1
-            ? &generate('static', $p, '', $flavour, $content_type)
-            : &generate('static', '', $p, $flavour, $content_type);
-        $fh_w->close;
-        foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('reset') and $plugin->reset() }
+	param('-quiet') or print "$fn.$flavour\n";
+	my $output_file = param('-no-output') ? "/dev/null" : "$static_dir/$fn.$flavour";
+	my $fh_w = new FileHandle "> $output_file" or die "Couldn't open $output_file for writing: $!";  
+	$output = '';
+	print $fh_w 
+            $indexes{$path} == 1
+	      ? &generate('static', $p, '', $flavour, $content_type)
+	      : &generate('static', '', $p, $flavour, $content_type);
+	$fh_w->close;
+	foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('reset') and $plugin->reset() }
       }
     }
   }
@@ -246,13 +266,14 @@ foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('end') 
 
 BEGIN {
   open F, ">", "/tmp/blosxom-generate.$<";
+#  print F "$$: ", scalar(localtime()), "\n";
 }
 
 # Generate 
 sub generate {
   my($static_or_dynamic, $currentdir, $date, $flavour, $content_type) = @_;
-  print F "($currentdir,$date) $flavour $content_type\n";
-  my $single_title;
+  print F "Starting generate: ($currentdir,$date) $flavour $content_type\n";
+  my ($single_title, $single_metadata);
   my $datepath = $date;
   my %f = %files;
 
@@ -310,7 +331,9 @@ sub generate {
       ($path,$fn) = $path_file =~ m!^$datadir/(?:(.*)/)?(.*)\.$file_extension!;
   
       # Only stories in the right hierarchy
+      $DB::single=1 if $currentdir =~ /geo-trivia/;
       $path =~ /^$currentdir/ or $path_file eq "$datadir/$currentdir" or next;
+      # print F "  generating from $path_file\n";
   
       # Prepend a slash for use in templates only if a path exists
       $path &&= "/$path";
@@ -336,9 +359,6 @@ sub generate {
   
       $date = &$interpolate($date);
 
-      my $st_date_header = "";
-      $curdate ne $date and $curdate = $date and $st_date_header = $date;
-
       use vars qw/ $title $body $raw /;
       if (-f "$path_file" && $fh->open("< $path_file")) {
         chomp($title = <$fh>);
@@ -349,6 +369,8 @@ sub generate {
       my $story = (&$template($path,'story',$flavour));
   
       # Plugins: Story
+      my $suppress;
+      print F "    Calling story plugins\n";
       foreach my $plugin ( @plugins ) { 
 	  if ($plugins{$plugin} > 0 and $plugin->can('story')) {
 	      my $complete_path = "$datadir$path/$fn.$file_extension";
@@ -368,17 +390,22 @@ sub generate {
 		  metadata   => $blosxom::metadata_hash{"$path/$fn"},
 		  complete_path => $complete_path,
 		  published_time => $files{$complete_path},
+		  suppress => \$suppress,
 		  );
 	      $entries = $plugin->story(\%args);
 #	      $entries = $plugin->story($path, $fn, \$story, \$title, \$body, $currentdir, $datepath, $blosxom::metadata_hash{"$path/$fn"})
 	  }
       }
+      print F "    Finished calling story plugins\n";
 
       # If an archive page has only one article, it is stored in
       # $single_title, which is later inserted into $page_title, which
       # appears in the <title> element.  Otherwise $single_title is
       # false. 20120826 mjd@plover.com
       $single_title = defined($single_title) ? "" : $title;
+      # Similarly $single_meta contains the single article's metadata
+      $single_metadata = defined($single_metadata) ? "" : $blosxom::metadata_hash{"$path/$fn"};
+      print F "single_metadata is now $single_metadata ($path/$fn)\n";
 
       if ($content_type =~ m{\Wxml$}) {
         # Escape <, >, and &, and to produce valid RSS
@@ -388,7 +415,13 @@ sub generate {
         $body =~ s/($escape_re)/$escape{$1}/g;
       }
   
-      push @stories, $st_date_header .  &$interpolate($story);
+      my $st_date_header = "";
+      if ($suppress) {
+          print F "    Suppressed!\n";
+      } else {
+	  $curdate ne $date and $curdate = $date and $st_date_header = $date;
+	  push @stories, $st_date_header .  &$interpolate($story);
+      }
     
       $fh->close;
   
@@ -414,15 +447,16 @@ sub generate {
     my $head = (&$template($currentdir,'head',$flavour));
   
     # Plugins: Head
-    foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('head') and $entries = $plugin->head($currentdir, \$head) }
-
+    my $extra = { datepath => $datepath, dirfile => $currentdir,
+		  single => $single_metadata, };
+    print F "    Calling head plugins; single_metadata now $single_metadata\n";
+    foreach my $plugin ( @plugins ) { $plugins{$plugin} > 0 and $plugin->can('head') and $entries = $plugin->head($currentdir, \$head, $extra) }
     $head = &$interpolate($head);
   
     $output .= $head;
 
     # Insert stories
     $output .= join "", @stories;
-    
 
     # Foot
     my $foot = (&$template($currentdir,'foot',$flavour));
@@ -531,48 +565,3 @@ sub PRINT {
   print DIAGNOSIS "\n";
 }
 
-package blosxom;
-
-# Figure out which blog configuration to load, then load it
-#
-# Search order:
-#  1. command-line option -blog-name
-#  2. query parameter blog-name
-#  3. SERVERNAME
-#  4. Default: 'blog'
-
-sub load_config {
-    my $default_blog_name = 'blog';
-
-    # CGI.pm makes this work in both command-line and web mode
-    my $blog_name = param('-blog-name');
-    if (!$blog_name and $ENV{SERVER_NAME}) {
-	($blog_name) = $ENV{SERVER_NAME} =~ /\A ([\w-]+) /x;
-    }
-    $blog_name ||= $default_blog_name;
-
-    print F "Selected blog configuration '$blog_name'\n";
-    print F "SERVERNAME = '$ENV{SERVER_NAME}'\n";
-    require "blosxom-config/$blog_name.pl";
-    print F "Loaded config for '$blog_title' ($datadir)\n";
-    return 1;
-}
-
-# Default HTML and RSS template bits
-__DATA__
-html content_type text/html
-html head <html><head><link rel="alternate" type="type="application/rss+xml" title="RSS" href="$url/index.rss" /><title>$blog_title $path_info_da $path_info_mo $path_info_yr</title></head><body><center><font size="+3">$blog_title</font><br />$path_info_da $path_info_mo $path_info_yr</center><p />
-html story <p><a name="$fn"><b>$title</b></a><br />$body<br /><br />posted at: $ti | path: <a href="$url$path">$path</a> | <a href="$url/$yr/$mo_num/$da#$fn">permanent link to this entry</a></p>\n
-html date <h3>$dw, $da $mo $yr</h3>\n
-html foot <p /><center><a href="http://www.blosxom.com/"><img src="http://www.blosxom.com/images/pb_blosxom.gif" border="0" /></a></body></html>
-rss content_type text/xml
-rss head <?xml version="1.0"?>\n<!-- name="generator" content="blosxom/$version" -->\n<!DOCTYPE rss PUBLIC "-//Netscape Communications//DTD RSS 0.91//EN" "http://my.netscape.com/publish/formats/rss-0.91.dtd">\n\n<rss version="0.91">\n  <channel>\n    <title>$blog_title $path_info_da $path_info_mo $path_info_yr</title>\n    <link>$url</link>\n    <description>$blog_description</description>\n    <language>$blog_language</language>\n
-rss story   <item>\n    <title>$title</title>\n    <link>$url/$yr/$mo_num/$da#$fn</link>\n    <description>$body</description>\n  </item>\n
-rss date \n
-rss foot   </channel>\n</rss>
-error content_type text/html
-error head <html><body><p><font color="red">Error: I'm afraid this is the first I've heard of a "$flavour" flavoured Blosxom.  Try dropping the "/+$flavour" bit from the end of the URL.</font>\n\n
-error story <p><b>$title</b><br />$body <a href="$url/$yr/$mo_num/$da#fn.$default_flavour">#</a></p>\n
-error date <h3>$dw, $da $mo $yr</h3>\n
-error foot </body></html>
-__END__

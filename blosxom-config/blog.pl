@@ -18,6 +18,9 @@ $blog_language = "en";
 # Where are this blog's entries kept?
 $datadir = "/home/mjd/misc/blog/entries";
 
+# Root of the picture directory
+$picdir = "/home/mjd/public_html/pictures/blog";
+
 # What's my preferred base URL for this blog (leave blank for automatic)?
 $url = "https://blog.plover.com/";
 
@@ -65,7 +68,14 @@ $static_entries = 1;
 # what is the default input language?
 $default_input_format = 'html';
 
+# Do posts here normally have a META section?
+$usually_has_meta_section = 1;
+
 # For path2 plugin: where should the browser look for images?
 $path2::testmode_image_url = "https://plover.com/~mjd/pictures/blog";
 $path2::production_image_url = "https://pic.blog.plover.com";
 
+$test_url = "https://blog.plover.com/testblog/";
+
+# This file contains defaults for templates that aren't overridden by plugins
+$default_templates = "/home/mjd/src/blosxom/default-templates";

@@ -40,6 +40,8 @@ sub foot {
     $blosxom::output =~ s/recent entries/additional posts/g;
     $blosxom::output =~ s/Archive/Historical backlog/g;
     $blosxom::output =~ s/archive/history/g;
+    $blosxom::output =~ s/About me/Author information/g;
+    $blosxom::output =~ s/In this section/Similar topics/g;
   }
   $story_count = 0;
   $page_begins_with_lipogram = 0;

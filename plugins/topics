@@ -1,11 +1,13 @@
 
 package topics;
 use DB_File;
+use strict;
 
 my %topic_table;
 my %Seen;
 
-my $min_count = 9;
+use Carp;
+
 my $topic_menu;
 
 my %topic_name = (prog => "programming",
@@ -15,17 +17,27 @@ my %topic_name = (prog => "programming",
                   "lang/etym" => "etymology",
                  "prog/haskell" => "Haskell",
                  "math" => "Mathematics",
-                 "math/se" => "Math.SE",
+                 "math/se" => "Math SE",
                  "bio" => "biology",
-                 "aliens/dd" => "Cosmic Call"
+                 "aliens/dd" => "Cosmic Call",
+		 "meta/shitpost" => undef,
+		  "addenda" => undef,
+		  "meta" => undef,
+		  "misc" => "Miscellaneous",
                  );
 
 
 sub start {
   open F, ">", "/tmp/topics.$>";
-  print F "Writing to $blosxom::plugin_state_dir/topics\n";
+  { my $ofh = select F; $| = 1 ; select $ofh; }
+  print F "-----\nWriting to $blosxom::plugin_state_dir/topics (plugin_name = $_[0])\n";
+  print F scalar(localtime()), " $$\n";
   tie %topic_table,"DB_File", "$blosxom::plugin_state_dir/topics" or die $!;
   tie %Seen,"DB_File", "$blosxom::plugin_state_dir/topics-Seen" or die $!;
+  printf F "articles already seen: %d\n", scalar(keys %Seen);
+
+  my $min_count = 15;		# only topics with at least this many items
+  my $n_entries = 0;		# unlimited
 
   build_topic_menu(\%topic_table, $n_entries, $min_count);
 
@@ -34,16 +46,21 @@ sub start {
 
 sub build_topic_menu {
   my ($topic_count, $n_entries, $min_count) = @_;
+  my @entries;
   my @topics_by_count = sort { $topic_count->{$b} <=> $topic_count->{$a} }
     keys %$topic_count;
   my $n = 0;
   my @links;
   while (@topics_by_count) {
     my $topic = shift @topics_by_count;
+#    if ($topic eq "" or $topic =~ m#HASH\(0x[0-9a-f]+\)#) { delete $topic_count->{$topic}; next }
     my $topic_count = $topic_count->{$topic};
     print F "topic $topic has $topic_count item(s)\n";
     last if $topic_count < $min_count;
     $topic =~ s{^/}{};
+    # An explicit "undef" value means to omit this topic from the menu
+    next if exists $topic_name{$topic} and not defined $topic_name{$topic};
+
     push @entries, [$topic, $topic_count];
     last if $n_entries > 0 && ++$n > $n_entries;
   }
@@ -51,30 +68,48 @@ sub build_topic_menu {
   $topic_menu = "";
   for my $e (@entries) {
     my ($topic, $count) = @$e;
+
     my $topic_name = $topic_name{$topic} // $topic;
 
     my $entry =  qq{<tr><td bgcolor="#ccccff" class="menuitem" style="padding-right: 0;"><a href="/$topic/">\u$topic_name</a><td align='right' bgcolor="#ccccff" class="menuitem" style="padding-left: 0;">$count</tr>};
     $topic_menu .= "$entry\n";
   }
 
-  $topic_menu = qq{<table width="100%" style="border-spacing: 0 1px;" class='menuitem'>$topic_menu</table>\n};
+  $topic_menu = qq{<table width="100%" style="border-spacing: 0 1px;"  class='menuitem'>$topic_menu</table>\n};
 }
 
 sub story {
-  my ($pkg, $path, $filename, $story_ref, $title_ref, $body_ref, $base) = @_;
+  my ($pkg, $args) = @_;
+  my ($category, $filename) =  @{$args}{qw/category filename/};
+
+  # This is so we don't count up test-only articles by mistake
   return if $blosxom::testmode;
-  my $fullpath = "$path/$filename";
-  if ($Seen {$fullpath}){
+
+  my $fullpath = "$category/$filename";
+  if ($Seen{$fullpath}){
     return;
+  } else {
+    $Seen{$fullpath} = 1;
   }
-  $Seen{$fullpath} = 1;
-  $topic_table{$path} = $topic_table{$path} + 1;
-  print F "$path, $filename, $base\n";
+  if (! $Seen{$fullpath}){
+    # This should never happen, but it _was_ happening in October 2018,
+    # so let's just be sure
+    require Carp;
+    Carp::confess("Data is not being stored to %Seen, again\n");
+  }
+# Use this if you want to include /prog/haskell in /prog
+#  do {
+#    $topic_table{$category} = $topic_table{$category} + 1;
+#    print F "$filename is item $topic_table{$category} in $category\n";
+#  } while $category =~ s#/[^/]*$## && $category ne "";
+# Otherwise use this:
+    $topic_table{$category} = $topic_table{$category} + 1;
+    print F "$filename is item $topic_table{$category} in $category\n";
+
 }
 
 sub foot {
   $blosxom::output =~ s/TOPIC_MENU/$topic_menu/g;
 }
-
 
 1;

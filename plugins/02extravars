@@ -117,7 +117,8 @@ sub usenet_path {
     push @path, $node;
   }
 
-  return join "!", reverse @path;
+  my $zwsp = "&#8203;";		# zero-width space
+  return join "$zwsp!", reverse @path;
 }
 
 my @namespace = qw(talk.mjd 8 alt.mjd 2 alt.sex 4

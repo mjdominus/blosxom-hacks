@@ -10,7 +10,7 @@ sub start { ! $TEST }
 sub filter {
   my ($pkg, $files) = @_;
 
-  delete $files->{$_} for grep /test/, keys %$files;
+  delete $files->{$_} for grep /\btest\b/, keys %$files;
   return 1;
 }
 
