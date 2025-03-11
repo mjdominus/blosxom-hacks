@@ -1,0 +1,80 @@
+# -*- cperl -*-
+
+package zy_redirect;
+use lib '/home/mjd/misc/blog/src/lib';
+use strict 'vars';
+open my($f), ">", "/tmp/redirect.$<";
+print $f "Starting at " . localtime() . "\n";
+
+sub start {
+  0;
+}
+
+sub redirect_url {
+  my ($redir) = @_;
+  print $f "  Computing URL for redirect to $redir:\n";
+  if ($redir !~ m{^\w+://}) {
+    $redir = $blosxom::url . $redir;
+  }
+  $redir =~ s/\.blog$/.html/;
+  print $f "    $redir\n";
+  return $redir;
+}
+
+sub head {
+  my ($pkg, $currentdir, $headref, $extra) = @_;
+  { local $" = ")(";  print $f "* head(@_)\n" }
+  print $f "** extra: ", join(", ", %$extra), "\n";
+  my $single_metadata = $extra->{single};
+  if (! $single_metadata) {
+    $blosxom::redirect_meta_header = qq{<!-- no meta redirect header -->};
+    print $f "No redirect header because \$single_metadata is false\n";
+    return;
+  }
+
+  print $f "** meta: ", join(", ", %$single_metadata), "\n";
+  if ($single_metadata->{redirect}) {
+    my $target_url = redirect_url($single_metadata->{redirect});
+    my $redir = q{<meta http-equiv="refresh" content="0;$target_url" />};
+    if ($blosxom::testmode && 0) {
+      $blosxom::redirect_meta_header = qq{<!-- meta http-equiv="refresh" content="0;$target_url" / -->\n};
+#      $blosxom::redirect_meta_header = qq{<meta http-equiv="refresh" content="0;$target_url" />\n};
+    } else {
+      $blosxom::redirect_meta_header = qq{<meta http-equiv="refresh" content="0;$target_url" />\n};
+    }
+  } else {
+    $blosxom::redirect_meta_header = qq{<!-- no meta redirect header -->};
+  }
+  print $f "Redirect text: $blosxom::redirect_meta_header\n";
+}
+
+sub story {
+  my ($pkg, $arg) = @_;
+  print $f "  Args for $arg->{filename}:\n";
+  for my $k (sort keys %$arg) {
+    print $f "    $k -> $arg->{$k}\n";
+  }
+  my $meta = $arg->{metadata};
+  print $f "  Metadata for $arg->{filename}:\n";
+  for my $k (sort keys %$meta) {
+    print $f "    $k -> $meta->{$k}\n";
+  }
+  if ($meta->{redirect}) {
+    my $target_url = redirect_url($meta->{redirect});
+    my $bodyref = $arg->{bodyref};
+    if ($blosxom::testmode && 0) {
+      print $f "  testmode: replacing body with Article moved to...\n";
+      $$bodyref = qq{<p><font size="+2">Article moved to <a href="$target_url"><tt>$target_url</tt></a></font></p>} . $$bodyref;
+    } elsif ($arg->{datepath} ne '//' || $arg->{catpath} eq "") {
+      print $f "  redirect suppressed! (datepath=$arg->{datepath}, catpath=$arg->{catpath})\n";
+      ${$arg->{suppress}} = 1;
+      return;
+    } else {
+      print $f "  NOT testmode: replacing body with Redirected to...\n";
+      $$bodyref = qq{<p><font color="darkred" size="+2">This article has moved to <a href="$target_url">$meta->{redirect}</a></font></p>};
+    }
+  }
+}
+
+1;
+

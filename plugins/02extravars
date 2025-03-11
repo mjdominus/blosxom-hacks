@@ -24,6 +24,13 @@ sub story {
   $h{usenetpath} = usenet_path($date);
   $h{newsgroup} = join "." => newsgroup_namespace($date), $h{fn_trimmed};
 
+  my $title_escaped = $$title_ref;
+  for my $p (["&" => "amp"], ["<" => "lt"], [">" => "gt"], ['"' => "quot"]) {
+    my ($from, $to) = @$p;
+    $title_escaped =~ s/$from/&$to;/g;
+  }
+  $h{page_title_escaped} = $title_escaped;
+
   intern('blosxom', \%h);
   return 1;
 }

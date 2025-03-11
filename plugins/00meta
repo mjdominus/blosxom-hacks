@@ -18,7 +18,7 @@ print $f "Tie::File:Hash version $Tie::File::Hash::VERSION\n";
 our %metadb;
 
 sub start {
-  tie %metadb => 'Tie::File::Hash' => $metadb, 
+  tie %metadb => 'Tie::File::Hash' => $metadb,
     {
      mode => O_RDWR | O_CREAT,
      flock => LOCK_EX,

@@ -258,7 +258,9 @@ else {
 
   $header = {-type=>$content_type, -charset => "UTF-8"};
 
-  print generate('dynamic', $path_info, "$path_info_yr/$path_info_mo_num/$path_info_da", $flavour, $content_type);
+  my $date = "$path_info_yr/$path_info_mo_num/$path_info_da";
+  $date = "" if $date eq "//";
+  print generate('dynamic', $path_info, $date, $flavour, $content_type);
 }
 
 # Plugins: End

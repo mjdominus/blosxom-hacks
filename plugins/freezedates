@@ -47,7 +47,7 @@ sub load_dates {
     my ($date, $file) = split /\s+/, $_, 2;
     if (my ($y, $m, $d) = $date =~ /^(\d\d\d\d)-?(\d\d)-?(\d\d)$/) {
       require Time::Local;
-      my $q = Time::Local::timelocal(0, 0, 0, $d, $m-1, $y-1900);
+      my $q = Time::Local::timelocal(0, 0, 12, $d, $m-1, $y-1900);
       $date = $q if $q != -1;
       $write = 1;
     }

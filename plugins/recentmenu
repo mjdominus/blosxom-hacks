@@ -5,6 +5,7 @@ sub start { open F, ">", "/tmp/recentmenu.$<" or return 1;
             my $ofh = select F;
             $|=1;
             select $ofh;
+	    print F "** Recentmenu: " . localtime() . "\n";
             return 1;
           }
 
@@ -15,9 +16,18 @@ sub story {
   my ($path, $filename, $story_ref, $title_ref, $body_ref, $dir, $date)
     = @{$arg}{qw/category filename storyref titleref bodyref
 		 catpath datepath metadata/};
+
+  my $argstr = join ";  ", map { "$_: $arg->{$_}" } sort keys %$arg;
+  print F "$argstr\n";
+  print F "$path $filename\n";
+  print F "($dir) ($date)\n";
   return unless $dir eq "" && $date eq "" ;
+  print F "AAA\n";
   return unless $blosxom::flavour eq "html";
+  print F "BBB\n";
   return if $$title_ref eq "";
+  print F "CCC\n";
+  
 
  my $link = qq{<a href="$blosxom::url$path/$filename.$blosxom::flavour"><span class=menuitem>$$title_ref</span></a>};
 
@@ -27,7 +37,8 @@ sub story {
 #  $menu = "<ul>" . join("", map("<li>$_\n", @menu)) . "</ul>\n";
 ##  $menu = join "&nbsp;/ ", @menu;
     $menu = join "\n", @menu, "";
-#  print F "$link\n";
+  print F "$link\n";
+  print F "END\n";
 }
 
 
