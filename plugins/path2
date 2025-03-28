@@ -6,6 +6,7 @@ use HTML::TreeBuilder;
 #my $blogimg = "http://www.plover.com/~mjd/pictures/blog";
 my $blogimg;
 my $first_image_url;
+my $first_image_alt;
 
 sub start {
   return unless $blosxom::flavour eq "html";
@@ -94,18 +95,20 @@ sub story {
       local $_ = $2;
       my $replacement = $translate->($2, $1, $arg);
       print F "    Will change it to <$replacement>\n";
-      push @changes, [ qq{$attr="$url"}, join("", qq{$attr="$replacement"}) ];
+      push @changes, [ qq{$attr="$url"}, join("",  qq{$attr="$replacement"}), $link->attr("alt") || "(no alt)" ];
     }
   }
 
   print F "    ----\n" if @changes;
   for my $change (@changes) {
-    my ($from, $to) = @$change;
-    print F "    Replacing <$from>\n         with <$to>\n";
+    my ($from, $to, $alt) = @$change;
+    print F "    Replacing <$from>\n         with <$to>\n        alt=$alt\n";
     if (! defined $first_image_url && $from =~ /src=/) {
       print F "      Trying to set first image; to=$to\n";
       ($first_image_url) = ($to =~ /src="(.*)"/);
-      print F "      first_image_url set to $first_image_url\n"
+      ($first_image_alt = $alt) =~ tr/\n/ /s;
+      print F "      first_image_url set to $first_image_url\n";
+      print F "      first_image_alt set to $first_image_alt\n";
     }
     my $pos = index($$body_ref, $from);
     if ($pos < 0) {
@@ -122,7 +125,11 @@ sub story {
 sub foot {
   print F "In foot with first_image = $first_image_url\n";
   $first_image_url ||= "https://pic.blog.plover.com/FIRST_IMAGE_DEFAULT.jpg";
+  # I kinda hate that this is hardwired here and not in the head.html template
+  # but good enough I guess
+  $first_image_alt ||= "Square quilt block made of 32 black and white triangles"; 
   $blosxom::output =~ s/FIRST_IMAGE_URL/$first_image_url/g;
+  $blosxom::output =~ s/FIRST_IMAGE_ALT/$first_image_alt/g;
 }
 
 1;
